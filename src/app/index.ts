@@ -4,7 +4,7 @@ import path from 'path'
 import cookieParser from 'cookie-parser'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import {createLogger} from './logger'
+import { createLogger } from './logger'
 const logger = createLogger(__filename)
 const app = express()
 app.use(cors())
