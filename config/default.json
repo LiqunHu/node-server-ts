@@ -1,0 +1,37 @@
+{
+  "mysql": {
+    "normal": {
+      "database": "imccdata",
+      "username": "root",
+      "password": "123456",
+      "host": "localhost",
+      "port": 33306
+    },
+    "readonly": {
+      "database": "imccdata",
+      "username": "root",
+      "password": "123456",
+      "host": "localhost",
+      "port": 33306
+    }
+  },
+  "loggerConfig": {
+    "appenders": {
+      "out": {
+        "type": "stdout"
+      },
+      "everything": {
+        "type": "dateFile",
+        "filename": "../log/app.log",
+        "pattern": "-yyyy-MM-dd",
+        "compress": true
+      }
+    },
+    "categories": {
+      "default": {
+        "appenders": ["out", "everything"],
+        "level": "debug"
+      }
+    }
+  }
+}

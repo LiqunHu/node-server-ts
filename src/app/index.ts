@@ -4,7 +4,8 @@ import path from 'path'
 import cookieParser from 'cookie-parser'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-
+import {createLogger} from './logger'
+const logger = createLogger(__filename)
 const app = express()
 app.use(cors())
 
@@ -41,6 +42,7 @@ app.get('/__webpack_hmr', function (req: Request, res: Response) {
 })
 
 app.get('/', (req: Request, res: Response) => {
+  logger.debug('11111111111')
   res.send('Wellcome, My name is Hung.')
 })
 
