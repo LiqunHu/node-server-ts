@@ -11,9 +11,11 @@
     "debug": "node --inspect=0.0.0.0:9229 --use-strict ./bin/www",
     "genswagger": "rimraf ./public/swagger/swagger.json && joi-swagger-generator -r -v ./services/ -h ./public/swagger/header.json -o ./public/swagger/swagger.json",
     "test": "mocha --recursive --watch --slow 300",
-    "lint": "eslint \"src/**/*.{js,ts}\" --quiet --fix"
+    "lint": "eslint \"src/**/*.{js,ts}\" --fix",
+    "format": "prettier --write  \"src/**/*\""
   },
   "pre-commit": [
+    "format",
     "lint"
   ],
   "dependencies": {
@@ -43,6 +45,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.2.0",
     "pre-commit": "^1.2.2",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "ts-node": "^10.5.0",
     "tslib": "^2.3.1",

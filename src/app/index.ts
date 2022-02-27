@@ -15,22 +15,22 @@ app.use('/files', express.static(path.join(__dirname, '../../public/files')))
 app.use(
   log4js.connectLogger(log4js.getLogger('http'), {
     level: 'auto',
-    nolog: '\\.gif|\\.jpg$'
+    nolog: '\\.gif|\\.jpg$',
   })
 )
 app.use(
   bodyParser.json({
-    limit: '50mb'
+    limit: '50mb',
   })
 )
 app.use(
   bodyParser.urlencoded({
-    extended: false
+    extended: false,
   })
 )
 app.use(
   bodyParser.text({
-    type: 'text/*'
+    type: 'text/*',
   })
 )
 app.use(bodyParser.raw())
