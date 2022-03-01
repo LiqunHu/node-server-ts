@@ -2,6 +2,7 @@
 import http from 'http'
 import { AddressInfo } from 'net'
 import app from './app'
+import { initDB } from './app/db'
 
 const port = process.env.PORT || 9090
 
@@ -49,6 +50,11 @@ const onListening = () => {
 /**
  * Listen on provided port, on all network interfaces.
  */
-server.listen(port, () => {})
+server.listen(port, () => {
+  Promise.all([initDB()]).catch((err) => {
+    console.error(err)
+  })
+  console.info('Init Success')
+})
 server.on('error', onError)
 server.on('listening', onListening)

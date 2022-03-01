@@ -1,19 +1,11 @@
 {
   "mysql": {
-    "normal": {
-      "database": "imccdata",
-      "username": "root",
-      "password": "123456",
-      "host": "localhost",
-      "port": 33306
-    },
-    "readonly": {
-      "database": "imccdata",
-      "username": "root",
-      "password": "123456",
-      "host": "localhost",
-      "port": 33306
-    }
+    "host": "47.100.125.200",
+    "port": 33306,
+    "username": "root",
+    "password": "EdWNO2CDXgR9LrcR",
+    "database": "testdb",
+    "logging": true
   },
   "loggerConfig": {
     "appenders": {
