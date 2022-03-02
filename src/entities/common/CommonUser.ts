@@ -4,7 +4,7 @@ import { CommonEntity } from '@entities/CommonEntity'
 
 const toMD5Hash: ValueTransformer = {
   from: (value: string) => value,
-  to: (value: string) => CryptoJS.MD5(value).toString(),
+  to: (value: string) => CryptoJS.MD5(value).toString()
 }
 
 @Entity({ name: 'tbl_common_user' })
