@@ -21,6 +21,6 @@ export class CommonApi extends CommonEntity {
   @Column({ default: '1', length: 2, comment: '是否需要授权 1需要 0不需要' })
   authFlag: string
 
-  @Column({ default: '', length: 500, comment: 'api 备注' })
+  @Column({ default: '', length: 30, comment: 'api 备注' })
   parentId: string
 }
