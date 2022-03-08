@@ -37,6 +37,6 @@ const errorList: { [index: string]: any } = {
   auth_12: '微信已绑定过用户',
   resetpassword_01: '用户不存在',
   device_01: '设备已经在',
-  device_02: '设备不经在'
+  device_02: '设备不经在',
 }
 export default errorList

@@ -3,7 +3,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies'
 import config from 'config'
 
 // let connection: Connection | null = null
-export async function initDB () {
+export async function initDB() {
   await createConnection({
     type: 'mysql',
     host: config.get<string>('mysql.host'),
@@ -14,11 +14,11 @@ export async function initDB () {
     entities: ['src/entities/**/*.ts'],
     synchronize: false,
     logging: config.get<boolean>('mysql.logging'),
-    namingStrategy: new SnakeNamingStrategy()
+    namingStrategy: new SnakeNamingStrategy(),
   })
 }
 
-export async function simpleSelect (queryStr: string, replacements?: any[]) {
+export async function simpleSelect(queryStr: string, replacements?: any[]) {
   const entityManager = getManager()
   const result = await entityManager.query(queryStr, replacements)
   return result

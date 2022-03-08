@@ -11,8 +11,9 @@
     "debug": "node --inspect=0.0.0.0:9229 --use-strict ./bin/www",
     "genswagger": "rimraf ./public/swagger/swagger.json && joi-swagger-generator -r -v ./services/ -h ./public/swagger/header.json -o ./public/swagger/swagger.json",
     "test": "mocha --recursive --watch --slow 300",
-    "lint": "eslint \"src/**/*.{js,ts}\" --fix",
-    "format": "prettier --write  \"src/**/*\""
+    "lint": "eslint \"src/**/*.{js,ts}\"",
+    "format": "prettier --write  \"src/**/*\"",
+    "createTable": "ts-node ./src/bin/createTable.ts"
   },
   "pre-commit": [
     "format",
@@ -22,13 +23,13 @@
     "config": "^3.3.7",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
-    "crypto-js": "^4.1.1",
     "express": "^4.17.3",
     "joi": "^17.6.0",
     "lodash": "^4.17.21",
     "log4js": "^6.4.1",
     "log4js-logstash-tcp": "^2.0.3",
     "mysql2": "^2.3.3",
+    "server-utils": "https://github.com/LiqunHu/server-utils-ts",
     "typeorm": "0.2.42",
     "typeorm-naming-strategies": "^3.0.0",
     "undici": "^4.14.1"
@@ -45,7 +46,6 @@
     "@typescript-eslint/eslint-plugin": "^5.12.1",
     "@typescript-eslint/parser": "^5.12.1",
     "eslint": "^7.32.0",
-    "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.2.0",

@@ -1,11 +1,15 @@
 {
   "mysql": {
-    "host": "47.100.125.200",
+    "host": "22222",
     "port": 33306,
     "username": "root",
-    "password": "EdWNO2CDXgR9LrcR",
+    "password": "1111",
     "database": "testdb",
     "logging": true
+  },
+  "redis": {
+    "host": "1111",
+    "port": 16379
   },
   "loggerConfig": {
     "appenders": {
@@ -25,5 +29,11 @@
         "level": "debug"
       }
     }
+  },
+  "security": {
+    "SECRET_KEY": "1111",
+    "TOKEN_AGE": 43200000,
+    "MOBILE_TOKEN_AGE": 31536000000,
+    "SYSTEM_TOKEN_AGE": 300000
   }
 }

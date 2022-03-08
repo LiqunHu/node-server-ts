@@ -7,12 +7,12 @@
   "globals": {
     "NodeJS": true
   },
-  "extends": ["standard"],
+  "extends": ["prettier"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest"
   },
-  "plugins": ["@typescript-eslint"],
-  "ignorePatterns":["src/types/**"],
+  "plugins": ["@typescript-eslint", "prettier"],
+  "ignorePatterns": ["src/types/**"],
   "rules": {}
 }

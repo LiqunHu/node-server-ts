@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, UpdateDateColumn, BeforeUpdate, BaseEntity } from 'typeorm'
+import {
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeUpdate,
+  BaseEntity,
+} from 'typeorm'
 
 export class CommonEntity extends BaseEntity {
   @Column({ length: 5, default: '1', comment: '软删除表示 1--生效 0--失效' })
@@ -14,7 +20,7 @@ export class CommonEntity extends BaseEntity {
   createdAt: Date
 
   @BeforeUpdate()
-  updateVersion () {
+  updateVersion() {
     this.version += 1
   }
 }

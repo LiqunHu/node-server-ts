@@ -3,11 +3,10 @@ import express, { Request, Response } from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-// import { createLogger } from './logger'
-// import { CommonUser } from '@entities/common/CommonUser'
+import config from 'config'
+import { authority, SecureConfig } from 'server-utils'
+import { simpleSelect } from '@app/db'
 import routers from '@/routes'
-// import { simpleSelect } from '@app/db'
-// const logger = createLogger(__filename)
 const app = express()
 app.use(cors())
 
@@ -17,13 +16,18 @@ app.use('/files', express.static(path.join(__dirname, '../../public/files')))
 app.use(
   log4js.connectLogger(log4js.getLogger('http'), {
     level: 'auto',
-    nolog: '\\.gif|\\.jpg$'
+    nolog: '\\.gif|\\.jpg$',
   })
 )
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.raw())
 app.use(cookieParser())
+
+const secureConfig = config.get<SecureConfig>('security')
+authority.initMiddleware(simpleSelect, secureConfig)
+// app.use('/api', authority.AuthMiddleware, systemTrace)
+app.use('/api', authority.authMiddleware)
 
 // 处理webpack服务请求
 app.get('/__webpack_hmr', function (req: Request, res: Response) {
@@ -32,16 +36,5 @@ app.get('/__webpack_hmr', function (req: Request, res: Response) {
 
 // test
 app.use('/api/test', routers.test)
-
-// app.get('/', async (req: Request, res: Response) => {
-//   logger.debug('11111111111')
-//   const user = await CommonUser.findOne({ userId: '00202780d08011eaa30bdd5d2522ca2c' })
-//   logger.debug(user)
-
-//   const result = await simpleSelect('select * from tbl_common_user where user_id = ?', ['00202780d08011eaa30bdd5d2522ca2c'])
-//   logger.debug(result)
-
-//   res.send('Wellcome, My name is Hung.')
-// })
 
 export default app

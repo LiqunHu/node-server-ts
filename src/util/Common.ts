@@ -7,15 +7,18 @@ import Error from './Error'
 
 const logger = createLogger(__filename)
 
-function docValidate (req: Request) {
+function docValidate(req: Request) {
   const doc = req.body
   return doc
 }
 
-async function reqTrans (req: Request, callFile: string) {
+async function reqTrans(req: Request, callFile: string) {
   const method = req.params.method
   const doc = req.body
-  const validatorFile = callFile.substring(0, callFile.length - 3) + '.validator' + callFile.substring(callFile.length - 3, callFile.length)
+  const validatorFile =
+    callFile.substring(0, callFile.length - 3) +
+    '.validator' +
+    callFile.substring(callFile.length - 3, callFile.length)
   if (fs.existsSync(validatorFile)) {
     const validator = await import(validatorFile)
     if (validator.apiList[method]) {
@@ -31,7 +34,7 @@ async function reqTrans (req: Request, callFile: string) {
 }
 
 // common response
-function success (data: any) {
+function success(data: any) {
   if (data) {
     return data
   } else {
@@ -39,7 +42,7 @@ function success (data: any) {
   }
 }
 
-function error (errcode?: string) {
+function error(errcode?: string) {
   if (_.isString(errcode)) {
     return errcode
   } else {
@@ -47,7 +50,7 @@ function error (errcode?: string) {
   }
 }
 
-function sendData (res: any, data: any) {
+function sendData(res: any, data: any) {
   if (_.isString(data)) {
     if ('WebSocket' in res || 'rabbitmq' in res) {
       res.errno = data
@@ -61,12 +64,12 @@ function sendData (res: any, data: any) {
       if (data in Error) {
         sendData = {
           errno: data,
-          msg: Error[data]
+          msg: Error[data],
         }
       } else {
         sendData = {
           errno: data,
-          msg: '错误未配置'
+          msg: '错误未配置',
         }
       }
       res.status(700).send(sendData)
@@ -78,13 +81,13 @@ function sendData (res: any, data: any) {
       res.send({
         errno: '0',
         msg: 'ok',
-        info: data
+        info: data,
       })
     }
   }
 }
 
-function sendFault (res: any, msg: any) {
+function sendFault(res: any, msg: any) {
   let sendData = {}
   logger.error(msg.stack)
 
@@ -95,18 +98,18 @@ function sendFault (res: any, msg: any) {
     if (process.env.NODE_ENV === 'test') {
       sendData = {
         errno: -1,
-        msg: msg.stack
+        msg: msg.stack,
       }
     } else {
       sendData = {
         errno: -1,
-        msg: 'Internal Error'
+        msg: 'Internal Error',
       }
     }
     res.status(500).send(sendData)
   }
 }
-function generateRandomAlphaNum (len: number) {
+function generateRandomAlphaNum(len: number) {
   const charSet = '0123456789'
   let randomString = ''
   for (let i = 0; i < len; i++) {
@@ -116,7 +119,7 @@ function generateRandomAlphaNum (len: number) {
   return randomString
 }
 
-function generateNonceString (length: number) {
+function generateNonceString(length: number) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   const maxPos = chars.length
   let noceStr = ''
@@ -174,5 +177,5 @@ export default {
   sendData,
   sendFault,
   generateRandomAlphaNum,
-  generateNonceString
+  generateNonceString,
 }

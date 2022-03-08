@@ -1,10 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ValueTransformer } from 'typeorm'
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ValueTransformer,
+} from 'typeorm'
 import CryptoJS from 'crypto-js'
 import { CommonEntity } from '@entities/CommonEntity'
 
 const toMD5Hash: ValueTransformer = {
   from: (value: string) => value,
-  to: (value: string) => CryptoJS.MD5(value).toString()
+  to: (value: string) => CryptoJS.MD5(value).toString(),
 }
 
 @Entity({ name: 'tbl_common_user' })

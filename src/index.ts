@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import http from 'http'
 import { AddressInfo } from 'net'
+import config from 'config'
+import { redisClient } from 'server-utils'
 import app from './app'
 import { initDB } from './app/db'
 
@@ -51,7 +53,8 @@ const onListening = () => {
  * Listen on provided port, on all network interfaces.
  */
 server.listen(port, () => {
-  Promise.all([initDB()]).catch((err) => {
+  const redisConfig = config.get('redis')
+  Promise.all([redisClient.initClient(redisConfig), initDB()]).catch((err) => {
     console.error(err)
   })
   console.info('Init Success')
