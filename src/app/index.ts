@@ -34,7 +34,8 @@ app.get('/__webpack_hmr', function (req: Request, res: Response) {
   res.send('')
 })
 
-// test
-app.use('/api/test', routers.test)
+for(let r of routers) {
+  app.use(r.url, r.handler)
+}
 
 export default app

@@ -6,16 +6,25 @@ import { redisClient, authority } from 'server-utils'
 import { simpleSelect } from '@app/db'
 import common from '@util/Common'
 import GLBConfig from '@util/GLBConfig'
-import { CommonUser, CommonUserGroups, CommonUsergroup } from '@entities/common'
+import {
+  common_user,
+  common_user_groups,
+  common_usergroup,
+} from '@entities/common'
+import { createLogger } from '@app/logger'
+const logger = createLogger(__filename)
 
 async function signinAct(req: Request) {
   let doc = await common.docValidate(req)
-  let user
 
-  if (doc.login_type === 'WEB' || doc.login_type === 'MOBILE') {
-    user = await CommonUser.findOne({
-      userUsername: doc.username,
-      state: GLBConfig.ENABLE,
+  if (
+    doc.login_type === 'WEB' ||
+    doc.login_type === 'ADMIN' ||
+    doc.login_type === 'MOBILE' ||
+    doc.login_type === 'SYSTEM'
+  ) {
+    let user = await common_user.findOne({
+      where: [{ user_phone: doc.username }, { user_username: doc.username }]
     })
 
     if (!user) {
@@ -24,15 +33,14 @@ async function signinAct(req: Request) {
 
     let decrypted = authority.aesDecryptModeCFB(
       doc.identify_code,
-      user.userPassword,
+      user.user_password,
       doc.magic_no
     )
 
-    if (!(decrypted == user.userUsername)) {
+    if (!(decrypted == user.user_username)) {
       return common.error('auth_03')
     } else {
-      let session_token = authority.user2token(doc.login_type, user.userId)
-      delete user.userPassword
+      let session_token = authority.user2token(doc.login_type, user.user_id)
       let loginData = await loginInit(user, session_token, doc.login_type)
 
       if (loginData) {
@@ -48,40 +56,40 @@ async function signinAct(req: Request) {
 }
 
 async function loginInit(
-  user: CommonUser,
+  user: common_user,
   session_token: string,
   type: string
 ) {
   try {
     let returnData = Object.create(null)
-    returnData.avatar = user.userAvatar
-    returnData.user_id = user.userId
-    returnData.username = user.userUsername
-    returnData.name = user.userName
-    returnData.phone = user.userPhone
-    returnData.created_at = dayjs(user.createdAt).format('MM[, ]YYYY')
-    returnData.city = user.userCity
+    returnData.avatar = user.user_avatar
+    returnData.user_id = user.user_id
+    returnData.username = user.user_username
+    returnData.name = user.user_name
+    returnData.phone = user.user_phone
+    returnData.created_at = dayjs(user.created_at).format('MM[, ]YYYY')
+    returnData.city = user.user_city
 
-    let groups = await CommonUserGroups.find({
-      userId: user.userId,
+    let groups = await common_user_groups.find({
+      user_id: user.user_id,
     })
 
     if (groups.length > 0) {
       let gids = []
       returnData.groups = []
       for (let g of groups) {
-        gids.push(g.usergroupId)
-        let usergroup = await CommonUsergroup.findOne({
-          usergroupId: g.usergroupId,
+        gids.push(g.usergroup_id)
+        let usergroup = await common_usergroup.findOne({
+          usergroup_id: g.usergroup_id,
         })
-        if (usergroup && usergroup.usergroupCode) {
-          returnData.groups.push(usergroup.usergroupCode)
+        if (usergroup && usergroup.usergroup_code) {
+          returnData.groups.push(usergroup.usergroup_code)
         }
       }
       if (type === 'MOBILE' || type === 'WEIXIN') {
         returnData.menulist = await genDashboard(gids)
       } else {
-        returnData.menulist = await iterationMenu(user, gids, '0')
+        returnData.menulist = await iterationMenu(user, gids, 0)
       }
 
       // prepare redis Cache
@@ -93,7 +101,7 @@ async function loginInit(
         auth_flag: '1',
         show_flag: '1',
       })
-      if (user.userType === GLBConfig.USER_TYPE.TYPE_ADMINISTRATOR) {
+      if (user.user_type === GLBConfig.USER_TYPE.TYPE_ADMINISTRATOR) {
         authApis.push({
           api_name: '系统菜单维护',
           api_path: '/admin/auth/SystemApiControl',
@@ -143,11 +151,13 @@ async function loginInit(
       } else {
         expired = config.get<number>('security.TOKEN_AGE') / 1000
       }
+      let usercache = JSON.parse(JSON.stringify(user))
+      delete usercache.user_password
       await redisClient.set(
-        [GLBConfig.REDIS_KEYS.AUTH, type, user.userId].join('_'),
+        [GLBConfig.REDIS_KEYS.AUTH, type, user.user_id].join('_'),
         {
           session_token: session_token,
-          user: user,
+          user: usercache,
           authApis: authApis,
         },
         'EX',
@@ -164,7 +174,7 @@ async function loginInit(
   }
 }
 
-const queryGroupApi = async (groups) => {
+const queryGroupApi = async (groups: number[]) => {
   try {
     // prepare redis Cache
     let queryStr = `select DISTINCT c.api_name, c.api_path, c.api_function, c.auth_flag, c.show_flag 
@@ -183,9 +193,22 @@ const queryGroupApi = async (groups) => {
   }
 }
 
-const iterationMenu = async (user, groups, parent_id) => {
+interface menuItem {
+  menu_id?: number
+  menu_type: string
+  menu_name: string
+  menu_path?: string
+  menu_icon?: string
+  show_flag?: string
+  sub_menu?: menuItem[]
+}
+async function iterationMenu(
+  user: common_user,
+  groups: number[],
+  parent_id: number
+): Promise<menuItem[]> {
   if (user.user_type === GLBConfig.USER_TYPE.TYPE_ADMINISTRATOR) {
-    let return_list = []
+    let return_list: menuItem[] = []
     return_list.push({
       menu_type: GLBConfig.NODE_TYPE.NODE_ROOT,
       menu_name: '权限管理',
@@ -194,37 +217,39 @@ const iterationMenu = async (user, groups, parent_id) => {
       sub_menu: [],
     })
 
-    return_list[0].sub_menu.push({
-      menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
-      menu_name: '系统菜单维护',
-      show_flag: '1',
-      menu_path: '/admin/auth/SystemApiControl',
-    })
+    if (return_list[0].sub_menu) {
+      return_list[0].sub_menu.push({
+        menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
+        menu_name: '系统菜单维护',
+        show_flag: '1',
+        menu_path: '/admin/auth/SystemApiControl',
+      })
 
-    return_list[0].sub_menu.push({
-      menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
-      menu_name: '角色组维护',
-      show_flag: '1',
-      menu_path: '/admin/auth/GroupControl',
-    })
+      return_list[0].sub_menu.push({
+        menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
+        menu_name: '角色组维护',
+        show_flag: '1',
+        menu_path: '/admin/auth/GroupControl',
+      })
 
-    return_list[0].sub_menu.push({
-      menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
-      menu_name: '用户维护',
-      show_flag: '1',
-      menu_path: '/admin/auth/OperatorControl',
-    })
+      return_list[0].sub_menu.push({
+        menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
+        menu_name: '用户维护',
+        show_flag: '1',
+        menu_path: '/admin/auth/OperatorControl',
+      })
 
-    return_list[0].sub_menu.push({
-      menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
-      menu_name: '重置密码',
-      show_flag: '1',
-      menu_path: '/admin/auth/ResetPassword',
-    })
+      return_list[0].sub_menu.push({
+        menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
+        menu_name: '重置密码',
+        show_flag: '1',
+        menu_path: '/admin/auth/ResetPassword',
+      })
+    }
 
     return return_list
   } else {
-    let return_list = []
+    let return_list: menuItem[] = []
     let queryStr = `select distinct b.systemmenu_id, b.node_type,b.systemmenu_name,b.systemmenu_icon, b.systemmenu_index, c.show_flag, c.api_path
         from tbl_common_usergroupmenu a, tbl_common_systemmenu b
           left join tbl_common_api c on b.api_id = c.api_id
@@ -234,13 +259,10 @@ const iterationMenu = async (user, groups, parent_id) => {
           order by b.systemmenu_index`
 
     let replacements = [groups, parent_id]
-    let menus = await sequelize.query(queryStr, {
-      replacements: replacements,
-      type: sequelize.QueryTypes.SELECT,
-    })
+    let menus = await simpleSelect(queryStr, replacements)
 
     for (let m of menus) {
-      let sub_menu = []
+      let sub_menu: menuItem[] = []
 
       if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT) {
         sub_menu = await iterationMenu(user, groups, m.systemmenu_id)
@@ -274,7 +296,7 @@ const iterationMenu = async (user, groups, parent_id) => {
   }
 }
 
-const genDashboard = async (groups) => {
+const genDashboard = async (groups: number[]) => {
   let return_list = []
   let queryStr = `select distinct b.systemmenu_id, b.systemmenu_name, b.systemmenu_mobile_icon, b.systemmenu_mobile_backcolor, c.api_path, c.api_function
         from tbl_common_usergroupmenu a, tbl_common_systemmenu b

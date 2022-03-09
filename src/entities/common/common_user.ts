@@ -33,7 +33,7 @@ export class common_user extends common_entity {
   user_phone: string
 
   @Column({ length: 100, transformer: toMD5Hash, comment: '密码' })
-  user_password?: string
+  user_password: string
 
   @Column({ default: 0, comment: '密码错误次数 -1未设置密码 0正常' })
   user_password_error: number

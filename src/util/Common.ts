@@ -21,8 +21,8 @@ async function reqTrans(req: Request, callFile: string) {
     callFile.substring(callFile.length - 3, callFile.length)
   if (fs.existsSync(validatorFile)) {
     const validator = await import(validatorFile)
-    if (validator.apiList[method]) {
-      const reqJoiSchema = validator.apiList[method].JoiSchema
+    if (validator.default.apiList.hasOwnProperty(method)) {
+      const reqJoiSchema = validator.default.apiList[method].JoiSchema
       if (reqJoiSchema.body) {
         const schema = Joi.object(reqJoiSchema.body)
         await schema.validateAsync(doc)
