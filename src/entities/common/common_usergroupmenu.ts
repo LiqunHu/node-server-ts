@@ -1,17 +1,17 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
-import { CommonEntity } from '@entities/CommonEntity'
+import { common_entity } from '@/entities/common_entity'
 
 @Entity({ name: 'tbl_common_usergroupmenu' })
-export class CommonUsergroupmenu extends CommonEntity {
+export class common_usergroupmenu extends common_entity {
   @PrimaryGeneratedColumn({ comment: '主键' })
-  usergroupmenuId: number
+  usergroupmenu_id: number
 
   @Column({ comment: '外键 tbl_common_usergroup' })
-  usergroupId: number
+  usergroup_id: number
 
   @Column({
     comment:
       '外键 tbl_common_systemmenu organization_id = 0, tbl_common_organizationmenu',
   })
-  menuId: number
+  menu_id: number
 }

@@ -5,7 +5,7 @@ import {
   ValueTransformer,
 } from 'typeorm'
 import CryptoJS from 'crypto-js'
-import { CommonEntity } from '@entities/CommonEntity'
+import { common_entity } from '@/entities/common_entity'
 
 const toMD5Hash: ValueTransformer = {
   from: (value: string) => value,
@@ -13,63 +13,63 @@ const toMD5Hash: ValueTransformer = {
 }
 
 @Entity({ name: 'tbl_common_user' })
-export class CommonUser extends CommonEntity {
+export class common_user extends common_entity {
   @PrimaryGeneratedColumn('uuid', { comment: '主键' })
-  userId: string
+  user_id: string
 
   @Column({ length: 100, comment: '用户名' })
-  userUsername: string
+  user_username: string
 
   @Column({ length: 10, comment: '用户类型' })
-  userType: string
+  user_type: string
 
   @Column({ length: 100, comment: 'Email' })
-  userEmail: string
+  user_email: string
 
   @Column({ length: 5, default: '86', comment: '国家代码' })
-  userCountryCode: string
+  user_country_code: string
 
   @Column({ length: 20, comment: '手机' })
-  userPhone: string
+  user_phone: string
 
   @Column({ length: 100, transformer: toMD5Hash, comment: '密码' })
-  userPassword: string
+  user_password?: string
 
   @Column({ default: 0, comment: '密码错误次数 -1未设置密码 0正常' })
-  userPasswordError: number
+  user_password_error: number
 
   @Column({ comment: '末次登陆时间' })
-  userLoginTime: Date
+  user_login_time: Date
 
   @Column({ length: 100, default: '', comment: '姓名' })
-  userName: string
+  user_name: string
 
   @Column({ length: 1, default: '', comment: '性别' })
-  userGender: string
+  user_gender: string
 
   @Column({ length: 200, default: '', comment: '头像' })
-  userAvatar: string
+  user_avatar: string
 
   @Column({ length: 20, default: '', comment: '省' })
-  userProvince: string
+  user_province: string
 
   @Column({ length: 20, default: '', comment: '市/县' })
-  userCity: string
+  user_city: string
 
   @Column({ length: 100, default: '', comment: '区' })
-  userDistrict: string
+  user_district: string
 
   @Column({ length: 32, default: '', comment: '地址' })
-  userAddress: string
+  user_address: string
 
   @Column({ length: 200, default: '', comment: '邮编' })
-  userZipcode: string
+  user_zipcode: string
 
   @Column({ length: 200, default: '', comment: '公司' })
-  userCompany: string
+  user_company: string
 
   @Column({ length: 200, default: '', comment: '备注' })
-  userRemark: string
+  user_remark: string
 
   // @Column(() => CommonEntity, { prefix: '' })
   // commonEntity: CommonEntity

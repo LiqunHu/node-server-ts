@@ -1,11 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
-import { CommonEntity } from '@entities/CommonEntity'
+import { common_entity } from '@/entities/common_entity'
 
 @Entity({ name: 'tbl_common_organizationtemplate' })
-export class CommonOrganizationtemplate extends CommonEntity {
+export class common_organizationtemplate extends common_entity {
   @PrimaryGeneratedColumn({ comment: '主键' })
-  organizationtemplateId: number
+  organizationtemplate_id: number
 
   @Column({ length: 50, comment: '模板名称' })
-  organizationtemplateName: string
+  organizationtemplate_name: string
 }

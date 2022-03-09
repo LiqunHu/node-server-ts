@@ -6,7 +6,7 @@ import {
   BaseEntity,
 } from 'typeorm'
 
-export class CommonEntity extends BaseEntity {
+export class common_entity extends BaseEntity {
   @Column({ length: 5, default: '1', comment: '软删除表示 1--生效 0--失效' })
   state: string
 
@@ -14,10 +14,10 @@ export class CommonEntity extends BaseEntity {
   version: number
 
   @UpdateDateColumn()
-  updatedAt: Date
+  updated_at: Date
 
   @CreateDateColumn()
-  createdAt: Date
+  created_at: Date
 
   @BeforeUpdate()
   updateVersion() {

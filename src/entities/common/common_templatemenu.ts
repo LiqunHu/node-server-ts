@@ -1,29 +1,29 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
-import { CommonEntity } from '@entities/CommonEntity'
+import { common_entity } from '@/entities/common_entity'
 
 @Entity({ name: 'tbl_common_templatemenu' })
-export class CommonTemplatemenu extends CommonEntity {
+export class common_templatemenu extends common_entity {
   @PrimaryGeneratedColumn({ comment: '主键' })
-  templatemenuId: number
+  templatemenu_id: number
 
   @Column({ nullable: true, comment: '机构模板ID' })
-  organizationtemplateId: number
+  organizationtemplate_id: number
 
   @Column({ length: 300, comment: '模板菜单名称' })
-  templatemenuName: string
+  templatemenu_name: string
 
   @Column({ default: '', length: 100, comment: '模板菜单图标' })
-  templatemenuIcon: string
+  templatemenu_icon: string
 
   @Column({ default: 0, comment: '模板菜单排序' })
-  templatemenuIndex: number
+  templatemenu_index: number
 
   @Column({ nullable: true, comment: '外键 tbl_common_api' })
-  apiId: number
+  api_id: number
 
   @Column({ nullable: true, length: 2, comment: '节点类型 NODETYPEINFO' })
-  nodeType: string
+  node_type: string
 
   @Column({ default: '', length: 30, comment: '父节点id 0为根节点' })
-  parentId: string
+  parent_id: string
 }

@@ -1,5 +1,8 @@
 export default {
   INITPASSWORD: '123456',
+  REDIS_KEYS: {
+    'AUTH': 'AUTH'
+  },
   NODE_TYPE: {
     NODE_ROOT: '00',
     NODE_LEAF: '01',

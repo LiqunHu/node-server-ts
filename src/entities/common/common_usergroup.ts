@@ -1,26 +1,26 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
-import { CommonEntity } from '@entities/CommonEntity'
+import { common_entity } from '@/entities/common_entity'
 
 @Entity({ name: 'tbl_common_usergroup' })
-export class CommonUsergroup extends CommonEntity {
+export class common_usergroup extends common_entity {
   @PrimaryGeneratedColumn({ comment: '主键' })
-  usergroupId: number
+  usergroup_id: number
 
   @Column({ comment: '组所属机构 0--系统组' })
-  organizationId: number
+  organization_id: number
 
   @Column({ default: '', length: 3, comment: '组类型' })
-  usergroupType: string
+  usergroup_type: string
 
   @Column({ default: '', length: 20, comment: '组唯一标识' })
-  usergroupCode: string
+  usergroup_code: string
 
   @Column({ default: '', length: 50, comment: '组名称' })
-  usergroupName: string
+  usergroup_name: string
 
   @Column({ default: '', length: 2, comment: '节点类型 NODETYPEINFO' })
-  nodeType: string
+  node_type: string
 
   @Column({ default: '', length: 30, comment: '父节点id 0为根节点' })
-  parentId: string
+  parent_id: string
 }

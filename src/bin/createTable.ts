@@ -2,7 +2,7 @@ import { getManager, createConnection } from 'typeorm'
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies'
 import config from 'config'
 
-let table = 'src/entities/common/CommonOrganization.ts'
+let table = 'src/entities/common/common_user.ts'
 // let connection: Connection | null = null
 export async function createDB() {
   if (table) {

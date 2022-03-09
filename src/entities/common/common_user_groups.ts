@@ -1,14 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
-import { CommonEntity } from '@entities/CommonEntity'
+import { common_entity } from '@/entities/common_entity'
 
 @Entity({ name: 'tbl_common_user_groups' })
-export class CommonUserGroups extends CommonEntity {
+export class common_user_groups extends common_entity {
   @PrimaryGeneratedColumn({ comment: '主键' })
-  userGroupsId: number
+  userGroups_id: number
 
   @Column({ length: 36, comment: '外键 tbl_common_user' })
-  userId: string
+  user_id: string
 
   @Column({ comment: '外键 tbl_common_usergroup' })
-  usergroupId: number
+  usergroup_id: number
 }

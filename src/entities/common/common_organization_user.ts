@@ -1,21 +1,21 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
-import { CommonEntity } from '@entities/CommonEntity'
+import { common_entity } from '@/entities/common_entity'
 
 @Entity({ name: 'tbl_common_api' })
-export class CommonOrganizationUser extends CommonEntity {
+export class common_organization_user extends common_entity {
   @PrimaryGeneratedColumn({ comment: '主键' })
-  organizationUserId: number
+  organization_user_id: number
 
   @Column({ comment: '外键 tbl_common_user' })
-  organizationId: number
+  organization_id: number
 
   @Column({ length: 36, comment: '外键 tbl_common_user' })
-  userId: string
+  user_id: string
 
   @Column({
     default: '',
     length: 2,
     comment: '默认机构标示 1--默认机构 只有一个',
   })
-  organizationUserDefaultFlag: string
+  organization_user_default_flag: string
 }

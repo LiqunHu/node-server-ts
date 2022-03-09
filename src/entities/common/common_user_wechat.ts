@@ -1,40 +1,40 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
-import { CommonEntity } from '@entities/CommonEntity'
+import { common_entity } from '@/entities/common_entity'
 
 @Entity({ name: 'tbl_common_user_wechat' })
-export class CommonUserWechat extends CommonEntity {
+export class common_user_wechat extends common_entity {
   @PrimaryGeneratedColumn({ comment: '主键' })
-  userWechatId: number
+  user_wechat_id: number
 
   @Column({ length: 36, comment: '外键 tbl_common_user' })
-  userId: string
+  user_id: string
 
   @Column({ length: 100, comment: '微信appid' })
-  userWechatAppid: string
+  user_wechat_appid: string
 
   @Column({ default: '', length: 100, comment: '微信openid' })
-  userWechatOpenid: string
+  user_wechat_openid: string
 
   @Column({ default: '', length: 100, comment: '微信unionid' })
-  userWechatUnionid: string
+  user_wechat_unionid: string
 
   @Column({ default: '', length: 100, comment: '微信nickname' })
-  userWechatNickname: string
+  user_wechat_nickname: string
 
   @Column({ default: '', length: 2, comment: '微信性别' })
-  userWechatSex: string
+  user_wechat_sex: string
 
   @Column({ default: '', length: 20, comment: '微信province' })
-  userWechatProvince: string
+  user_wechat_province: string
 
   @Column({ default: '', length: 20, comment: '微信city' })
-  userWechatCity: string
+  user_wechat_city: string
 
   @Column({ default: '', length: 20, comment: '微信country' })
-  userWechatCountry: string
+  user_wechat_country: string
 
   @Column({ default: '', length: 200, comment: '微信headimgurl' })
-  userWechatHeadimgurl: string
+  user_wechat_headimgurl: string
 
   @Column({
     default: '0',
