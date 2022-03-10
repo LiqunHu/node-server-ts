@@ -1,8 +1,17 @@
-import { getManager, createConnection } from 'typeorm'
+import {
+  getManager,
+  createConnection,
+  Logger,
+  LoggerOptions,
+  QueryRunner,
+} from 'typeorm'
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies'
 import config from 'config'
+import { createLogger } from '@app/logger'
+const logger = createLogger(__filename)
 
 // let connection: Connection | null = null
+
 export async function initDB() {
   await createConnection({
     type: 'mysql',
@@ -13,7 +22,8 @@ export async function initDB() {
     database: config.get<string>('mysql.database'),
     entities: ['src/entities/**/*.ts'],
     synchronize: false,
-    logging: config.get<boolean>('mysql.logging'),
+    logging:true,
+    logger: new Log4jsLogger(),
     namingStrategy: new SnakeNamingStrategy(),
   })
 }
@@ -56,3 +66,106 @@ export async function simpleSelect(queryStr: string, replacements?: any[]) {
 //     data: queryRst
 //   }
 // }
+
+class Log4jsLogger implements Logger {
+  // -------------------------------------------------------------------------
+  // Public Methods
+  // -------------------------------------------------------------------------
+
+  /**
+   * Logs query and parameters used in it.
+   */
+  logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner) {
+    const sql =
+      query +
+      (parameters && parameters.length
+        ? ' -- PARAMETERS: ' + this.stringifyParams(parameters)
+        : '')
+    logger.info('query' + ': ' + sql)
+  }
+
+  /**
+   * Logs query that is failed.
+   */
+  logQueryError(
+    error: string,
+    query: string,
+    parameters?: any[],
+    queryRunner?: QueryRunner
+  ) {
+    const sql =
+      query +
+      (parameters && parameters.length
+        ? ' -- PARAMETERS: ' + this.stringifyParams(parameters)
+        : '')
+    logger.error(`query failed: ` + sql)
+    logger.error(`error:`, error)
+  }
+
+  /**
+   * Logs query that is slow.
+   */
+  logQuerySlow(
+    time: number,
+    query: string,
+    parameters?: any[],
+    queryRunner?: QueryRunner
+  ) {
+    const sql =
+      query +
+      (parameters && parameters.length
+        ? ' -- PARAMETERS: ' + this.stringifyParams(parameters)
+        : '')
+    logger.warn(`query is slow: ` + sql)
+    logger.warn(`execution time: ` + time)
+  }
+
+  /**
+   * Logs events from the schema build process.
+   */
+  logSchemaBuild(message: string, queryRunner?: QueryRunner) {
+    logger.trace(message)
+  }
+
+  /**
+   * Logs events from the migrations run process.
+   */
+  logMigration(message: string, queryRunner?: QueryRunner) {
+    logger.info(message)
+  }
+
+  /**
+   * Perform logging using given logger, or by default to the console.
+   * Log has its own level and message.
+   */
+  log(level: 'log' | 'info' | 'warn', message: any, queryRunner?: QueryRunner) {
+    switch (level) {
+      case 'log':
+        logger.debug(message)
+        break
+      case 'info':
+        logger.info(message)
+        break
+      case 'warn':
+        logger.warn(message)
+        break
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Protected Methods
+  // -------------------------------------------------------------------------
+
+  /**
+   * Converts parameters to a string.
+   * Sometimes parameters can have circular objects and therefor we are handle this case too.
+   */
+  protected stringifyParams(parameters: any[]) {
+    try {
+      return JSON.stringify(parameters)
+    } catch (error) {
+      // most probably circular objects in parameters
+      return parameters
+    }
+  }
+}
