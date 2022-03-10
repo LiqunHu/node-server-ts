@@ -8,8 +8,8 @@ import common from '@util/Common'
 import GLBConfig from '@util/GLBConfig'
 import {
   common_user,
-  common_user_groups,
   common_usergroup,
+  common_user_wechat,
 } from '@entities/common'
 import { createLogger } from '@app/logger'
 const logger = createLogger(__filename)
@@ -24,10 +24,17 @@ async function signinAct(req: Request) {
     doc.login_type === 'SYSTEM'
   ) {
     let user = await common_user.findOne({
-      where: [{ user_phone: doc.username }, { user_username: doc.username }]
+      where: [
+        { user_phone: doc.username, state: GLBConfig.ENABLE },
+        { user_username: doc.username, state: GLBConfig.ENABLE },
+      ],
     })
 
     if (!user) {
+      return common.error('auth_03')
+    }
+
+    if (user.user_password_error < 0) {
       return common.error('auth_03')
     }
 
@@ -37,18 +44,26 @@ async function signinAct(req: Request) {
       doc.magic_no
     )
 
-    if (!(decrypted == user.user_username)) {
-      return common.error('auth_03')
-    } else {
+    if (
+      decrypted != '' &&
+      (decrypted === user.user_username || decrypted === user.user_phone)
+    ) {
       let session_token = authority.user2token(doc.login_type, user.user_id)
       let loginData = await loginInit(user, session_token, doc.login_type)
 
       if (loginData) {
         loginData.Authorization = session_token
+        user.user_password_error = 0
+        user.user_login_time = new Date()
+        await user.save()
         return common.success(loginData)
       } else {
+        user.user_password_error += 1
+        await user.save()
         return common.error('auth_03')
       }
+    } else {
+      return common.error('auth_03')
     }
   } else {
     return common.error('auth_19')
@@ -67,15 +82,78 @@ async function loginInit(
     returnData.username = user.user_username
     returnData.name = user.user_name
     returnData.phone = user.user_phone
-    returnData.created_at = dayjs(user.created_at).format('MM[, ]YYYY')
+    returnData.user_email = user.user_email
+    returnData.created_at = dayjs(user.created_at).format('YYYYMMDD')
     returnData.city = user.user_city
+    returnData.password_state = user.user_password_error
 
-    let groups = await common_user_groups.find({
+    let wechat = await common_user_wechat.find({
       user_id: user.user_id,
     })
 
+    if (wechat.length > 0) {
+      returnData.wechat = []
+      for (let w of wechat) {
+        returnData.wechat.push({
+          appid: w.user_wechat_appid,
+          openid: w.user_wechat_openid,
+          nickname: w.user_wechat_nickname,
+          headimgurl: w.user_wechat_headimgurl,
+        })
+      }
+    }
+
+    let organizations = await simpleSelect(
+      `SELECT a.organization_user_default_flag, b.organization_id , b.organization_code , b.organization_name 
+      FROM tbl_common_organization_user a , 
+      tbl_common_organization b 
+      WHERE a.organization_id = b.organization_id and b.organization_type = "01" 
+      and a.user_id = ? order by organization_index`,
+      [user.user_id]
+    )
+
+    returnData.default_organization = ''
+    returnData.default_organization_code = ''
+    returnData.default_organization_name = ''
+    returnData.organizations = []
+    for (let o of organizations) {
+      if (o.organization_user_default_flag === '1') {
+        returnData.default_organization = o.organization_id
+        returnData.default_organization_code = o.organization_code
+        returnData.default_organization_name = o.organization_name
+      }
+      returnData.organizations.push({
+        id: o.organization_id,
+        code: o.organization_code,
+        name: o.organization_name,
+      })
+    }
+
+    let orgs: number[] = [0]
+    if (returnData.default_organization) {
+      orgs.push(returnData.default_organization)
+    }
+
+    let groups = await simpleSelect(
+      `SELECT
+        usergroup_id
+      FROM
+        tbl_common_user_groups
+      WHERE
+        user_id = ?
+      AND usergroup_id IN(
+        SELECT
+          usergroup_id
+        FROM
+          tbl_common_usergroup a
+        WHERE
+          organization_id IN(?)
+      )`,
+      [user.user_id, orgs]
+    )
+
     if (groups.length > 0) {
-      let gids = []
+      let gids: number[] = []
       returnData.groups = []
       for (let g of groups) {
         gids.push(g.usergroup_id)
@@ -86,78 +164,104 @@ async function loginInit(
           returnData.groups.push(usergroup.usergroup_code)
         }
       }
-      if (type === 'MOBILE' || type === 'WEIXIN') {
-        returnData.menulist = await genDashboard(gids)
-      } else {
-        returnData.menulist = await iterationMenu(user, gids, 0)
-      }
+      // if (type === 'MOBILE' || type === 'WEIXIN') {
+      //   returnData.menulist = await genDashboard(gids)
+      // } else {
+      //   returnData.menulist = await iterationMenu(user, gids, '0')
+      // }
+
+      returnData.menulist = await iterationMenu(user, gids)
 
       // prepare redis Cache
       let authApis = []
       authApis.push({
         api_name: '用户设置',
-        api_path: '/common/user/UserSetting',
         api_function: 'USERSETTING',
         auth_flag: '1',
-        show_flag: '1',
       })
       if (user.user_type === GLBConfig.USER_TYPE.TYPE_ADMINISTRATOR) {
-        authApis.push({
-          api_name: '系统菜单维护',
-          api_path: '/admin/auth/SystemApiControl',
-          api_function: 'SYSTEMAPICONTROL',
-          auth_flag: '1',
-          show_flag: '1',
-        })
+        if (user.user_username === 'admin') {
+          authApis.push({
+            api_name: '系统菜单维护',
+            api_function: 'SYSTEMAPICONTROL',
+          })
 
-        authApis.push({
-          api_name: '角色组维护',
-          api_path: '/admin/auth/GroupControl',
-          api_function: 'GROUPCONTROL',
-          auth_flag: '1',
-          show_flag: '1',
-        })
+          authApis.push({
+            api_name: '角色组维护',
+            api_function: 'GROUPCONTROL',
+          })
 
-        authApis.push({
-          api_name: '用户维护',
-          api_path: '/admin/auth/OperatorControl',
-          api_function: 'OPERATORCONTROL',
-          auth_flag: '1',
-          show_flag: '1',
-        })
+          authApis.push({
+            api_name: '用户维护',
+            api_function: 'OPERATORCONTROL',
+          })
 
-        authApis.push({
-          api_name: '重置密码',
-          api_path: '/admin/auth/ResetPassword',
-          api_function: 'RESETPASSWORD',
-          auth_flag: '1',
-          show_flag: '1',
-        })
+          authApis.push({
+            api_name: '机构模板维护',
+            api_function: 'ORGANIZATIONTEMPLATECONTROL',
+          })
+
+          authApis.push({
+            api_name: '机构维护',
+            api_function: 'ORGANIZATIONCONTROL',
+          })
+
+          authApis.push({
+            api_name: '基础功能',
+            api_function: 'BASECONTROL',
+          })
+
+          authApis.push({
+            api_name: '重置密码',
+            api_function: 'RESETPASSWORD',
+          })
+        } else {
+          authApis.push({
+            api_name: '机构组织维护',
+            api_function: 'ORGANIZATIONGROUPCONTROL',
+          })
+
+          authApis.push({
+            api_name: '机构用户维护',
+            api_function: 'ORGANIZATIONUSERCONTROL',
+          })
+
+          authApis.push({
+            api_name: '基础功能',
+            api_function: 'BASECONTROL',
+          })
+        }
       } else {
         let groupapis = await queryGroupApi(gids)
         for (let item of groupapis) {
           authApis.push({
             api_name: item.api_name,
-            api_path: item.api_path,
             api_function: item.api_function,
             auth_flag: item.auth_flag,
-            show_flag: item.show_flag,
           })
         }
       }
+      returnData.authApis = authApis
       let expired = null
-      if (type === 'MOBILE' || type === 'WEIXIN') {
-        expired = config.get<number>('security.MOBILE_TOKEN_AGE') / 1000
+      if (type === 'MOBILE' || type === 'OA' || type === 'MP') {
+        expired = config.get<number>('security.MOBILE_TOKEN_AGE')
+      } else if (type === 'SYSTEM') {
+        expired = config.get<number>('security.SYSTEM_TOKEN_AGE')
       } else {
-        expired = config.get<number>('security.TOKEN_AGE') / 1000
+        expired = config.get<number>('security.TOKEN_AGE')
       }
-      let usercache = JSON.parse(JSON.stringify(user))
-      delete usercache.user_password
+      let userData = _.omit(JSON.parse(JSON.stringify(user)), ['user_password'])
+      userData.groups = JSON.parse(JSON.stringify(returnData.groups))
+      userData.wechat = JSON.parse(JSON.stringify(wechat))
+      userData.default_organization = returnData.default_organization
+      userData.default_organization_code = returnData.default_organization_code
+      let loginKey = [GLBConfig.REDIS_KEYS.AUTH, type, user.user_id].join('_')
+      await redisClient.del(loginKey)
       await redisClient.set(
-        [GLBConfig.REDIS_KEYS.AUTH, type, user.user_id].join('_'),
+        loginKey,
         {
           session_token: session_token,
-          user: usercache,
+          user: userData,
           authApis: authApis,
         },
         'EX',
@@ -177,14 +281,45 @@ async function loginInit(
 const queryGroupApi = async (groups: number[]) => {
   try {
     // prepare redis Cache
-    let queryStr = `select DISTINCT c.api_name, c.api_path, c.api_function, c.auth_flag, c.show_flag 
-          from tbl_common_usergroupmenu a, tbl_common_systemmenu b, tbl_common_api c
-          where a.systemmenu_id = b.systemmenu_id
-          and b.api_id = c.api_id
-          and a.usergroup_id in (?)
-          and b.state = '1'`
+    let queryStr = `SELECT DISTINCT
+        c.api_name ,
+        c.api_function ,
+        c.auth_flag
+      FROM
+        tbl_common_usergroupmenu a ,
+        tbl_common_systemmenu b ,
+        tbl_common_api c ,
+        tbl_common_usergroup d
+      WHERE
+        a.menu_id = b.systemmenu_id
+      AND b.api_id = c.api_id
+      AND a.usergroup_id = d.usergroup_id
+      AND d.organization_id = 0
+      AND(c.api_type = '0' OR c.api_type = '2')
+      AND c.api_function != ''
+      AND a.usergroup_id IN(?)
+      AND b.state = '1'
+      UNION
+        SELECT DISTINCT
+          c.api_name ,
+          c.api_function ,
+          c.auth_flag
+        FROM
+          tbl_common_usergroupmenu a ,
+          tbl_common_organizationmenu b ,
+          tbl_common_api c ,
+          tbl_common_usergroup d
+        WHERE
+          a.menu_id = b.organizationmenu_id
+        AND b.api_id = c.api_id
+        AND a.usergroup_id = d.usergroup_id
+        AND d.organization_id != 0
+        AND(c.api_type = '0' OR c.api_type = '2')
+        AND c.api_function != ''
+        AND a.usergroup_id IN(?)
+        AND b.state = '1'`
 
-    let replacements = [groups]
+    let replacements = [groups, groups]
     let groupmenus = await simpleSelect(queryStr, replacements)
     return groupmenus
   } catch (error) {
@@ -204,119 +339,198 @@ interface menuItem {
 }
 async function iterationMenu(
   user: common_user,
-  groups: number[],
-  parent_id: number
+  groups: number[]
 ): Promise<menuItem[]> {
   if (user.user_type === GLBConfig.USER_TYPE.TYPE_ADMINISTRATOR) {
-    let return_list: menuItem[] = []
+    let return_list = new Array()
     return_list.push({
       menu_type: GLBConfig.NODE_TYPE.NODE_ROOT,
       menu_name: '权限管理',
       menu_icon: 'fa-cogs',
-      show_flag: '1',
       sub_menu: [],
     })
-
-    if (return_list[0].sub_menu) {
+    if (user.user_username === 'admin') {
       return_list[0].sub_menu.push({
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '系统菜单维护',
-        show_flag: '1',
         menu_path: '/admin/auth/SystemApiControl',
       })
 
       return_list[0].sub_menu.push({
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '角色组维护',
-        show_flag: '1',
         menu_path: '/admin/auth/GroupControl',
       })
 
       return_list[0].sub_menu.push({
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '用户维护',
-        show_flag: '1',
         menu_path: '/admin/auth/OperatorControl',
       })
 
       return_list[0].sub_menu.push({
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
+        menu_name: '机构模板维护',
+        menu_path: '/admin/auth/OrganizationTemplateControl',
+      })
+
+      return_list[0].sub_menu.push({
+        menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
+        menu_name: '机构维护',
+        menu_path: '/admin/auth/OrganizationControl',
+      })
+
+      return_list[0].sub_menu.push({
+        menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '重置密码',
-        show_flag: '1',
         menu_path: '/admin/auth/ResetPassword',
+      })
+    } else {
+      return_list[0].sub_menu.push({
+        menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
+        menu_name: '机构组织维护',
+        menu_path: '/admin/auth/OrganizationGroupControl',
+      })
+
+      return_list[0].sub_menu.push({
+        menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
+        menu_name: '机构用户维护',
+        menu_path: '/admin/auth/OrganizationUserControl',
       })
     }
 
     return return_list
   } else {
-    let return_list: menuItem[] = []
-    let queryStr = `select distinct b.systemmenu_id, b.node_type,b.systemmenu_name,b.systemmenu_icon, b.systemmenu_index, c.show_flag, c.api_path
-        from tbl_common_usergroupmenu a, tbl_common_systemmenu b
-          left join tbl_common_api c on b.api_id = c.api_id
-          where a.systemmenu_id = b.systemmenu_id
-          and a.usergroup_id in (?)
-          and b.parent_id = ?
-          order by b.systemmenu_index`
+    let systemgroup = await simpleSelect(
+      'select usergroup_id from tbl_common_usergroup where organization_id = 0',
+      []
+    )
+    let sysgroup: number[] = []
+    systemgroup.forEach((val: any) => {
+      sysgroup.push(val.usergroup_id)
+    })
 
-    let replacements = [groups, parent_id]
-    let menus = await simpleSelect(queryStr, replacements)
+    let mugroup = _.difference(groups, sysgroup) || []
+    let sgroup = _.difference(groups, mugroup) || []
 
-    for (let m of menus) {
-      let sub_menu: menuItem[] = []
-
-      if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT) {
-        sub_menu = await iterationMenu(user, groups, m.systemmenu_id)
-      }
-
-      if (m.node_type === GLBConfig.NODE_TYPE.NODE_LEAF) {
-        return_list.push({
-          menu_id: m.systemmenu_id,
-          menu_type: m.node_type,
-          menu_name: m.systemmenu_name,
-          menu_path: m.api_path,
-          menu_icon: m.systemmenu_icon,
-          show_flag: m.show_flag,
-        })
-      } else if (
-        m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT &&
-        sub_menu.length > 0
-      ) {
-        return_list.push({
-          menu_id: m.systemmenu_id,
-          menu_type: m.node_type,
-          menu_name: m.systemmenu_name,
-          menu_path: m.api_path,
-          menu_icon: m.systemmenu_icon,
-          show_flag: '1',
-          sub_menu: sub_menu,
-        })
-      }
+    let sysMenus: menuItem[] = [],
+      menus: menuItem[] = []
+    if (sgroup.length > 0) {
+      sysMenus = await recursionSystemMenu(sgroup, '0')
     }
-    return return_list
+    if (mugroup.length > 0) {
+      menus = await recursionMenu(mugroup, '0')
+    }
+
+    return _.concat(sysMenus, menus)
   }
 }
+async function recursionSystemMenu(
+  groups: number[],
+  parent_id: string | number
+): Promise<menuItem[]> {
+  let return_list: menuItem[] = []
+  let queryStr = `SELECT DISTINCT
+        b.systemmenu_id menu_id ,
+        b.node_type ,
+        b.systemmenu_name menu_name ,
+        b.systemmenu_icon menu_icon ,
+        c.api_path
+      FROM
+        tbl_common_usergroupmenu a ,
+        tbl_common_systemmenu b
+      LEFT JOIN tbl_common_api c ON b.api_id = c.api_id
+      AND(c.api_type = '0' OR c.api_type = '1')
+      AND api_path != ''
+      WHERE
+        a.menu_id = b.systemmenu_id
+      AND a.usergroup_id IN(?)
+      AND b.parent_id = ?`
 
-const genDashboard = async (groups: number[]) => {
-  let return_list = []
-  let queryStr = `select distinct b.systemmenu_id, b.systemmenu_name, b.systemmenu_mobile_icon, b.systemmenu_mobile_backcolor, c.api_path, c.api_function
-        from tbl_common_usergroupmenu a, tbl_common_systemmenu b
-          left join tbl_common_api c on b.api_id = c.api_id
-          where a.systemmenu_id = b.systemmenu_id
-          and b.node_type = '01'
-          and b.systemmenu_mobile_icon != ''
-          and a.usergroup_id in (?)`
-  let replacements = [groups]
+  let replacements = [groups, parent_id]
   let menus = await simpleSelect(queryStr, replacements)
 
   for (let m of menus) {
-    return_list.push({
-      menu_id: m.systemmenu_id,
-      menu_name: m.systemmenu_name,
-      menu_path: m.api_path,
-      menu_function: m.api_function,
-      menu_icon: m.systemmenu_mobile_icon,
-      menu_backcolor: m.systemmenu_mobile_backcolor,
-    })
+    let sub_menu: menuItem[] = []
+
+    if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT) {
+      sub_menu = await recursionSystemMenu(groups, m.menu_id)
+    }
+
+    if (m.node_type === GLBConfig.NODE_TYPE.NODE_LEAF && m.api_path) {
+      return_list.push({
+        menu_type: m.node_type,
+        menu_name: m.menu_name,
+        menu_path: m.api_path,
+        menu_icon: m.menu_icon,
+      })
+    } else if (
+      m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT &&
+      sub_menu.length > 0
+    ) {
+      return_list.push({
+        menu_type: m.node_type,
+        menu_name: m.menu_name,
+        menu_path: m.api_path,
+        menu_icon: m.menu_icon,
+        sub_menu: sub_menu,
+      })
+    }
+  }
+  return return_list
+}
+
+async function recursionMenu(
+  groups: number[],
+  parent_id: string | number
+): Promise<menuItem[]> {
+  let return_list = []
+  let queryStr = `SELECT DISTINCT
+        b.organizationmenu_id menu_id ,
+        b.node_type ,
+        b.organizationmenu_name menu_name ,
+        b.organizationmenu_icon menu_icon ,
+        c.api_path
+      FROM
+        tbl_common_usergroupmenu a ,
+        tbl_common_organizationmenu b
+      LEFT JOIN tbl_common_api c ON b.api_id = c.api_id
+      AND(c.api_type = '0' OR c.api_type = '1')
+      AND api_path != ''
+    WHERE
+      a.menu_id = b.organizationmenu_id
+    AND a.usergroup_id IN(?)
+    AND b.parent_id = ?`
+
+  let replacements = [groups, parent_id]
+  let menus = await simpleSelect(queryStr, replacements)
+
+  for (let m of menus) {
+    let sub_menu: menuItem[] = []
+
+    if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT) {
+      sub_menu = await recursionMenu(groups, m.menu_id)
+    }
+
+    if (m.node_type === GLBConfig.NODE_TYPE.NODE_LEAF && m.api_path) {
+      return_list.push({
+        menu_type: m.node_type,
+        menu_name: m.menu_name,
+        menu_path: m.api_path,
+        menu_icon: m.menu_icon,
+      })
+    } else if (
+      m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT &&
+      sub_menu.length > 0
+    ) {
+      return_list.push({
+        menu_type: m.node_type,
+        menu_name: m.menu_name,
+        menu_path: m.api_path,
+        menu_icon: m.menu_icon,
+        sub_menu: sub_menu,
+      })
+    }
   }
   return return_list
 }

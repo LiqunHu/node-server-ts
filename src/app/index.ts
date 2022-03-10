@@ -34,7 +34,7 @@ app.get('/__webpack_hmr', function (req: Request, res: Response) {
   res.send('')
 })
 
-for(let r of routers) {
+for (let r of routers) {
   app.use(r.url, r.handler)
 }
 
