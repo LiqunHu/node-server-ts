@@ -55,7 +55,11 @@ const onListening = () => {
 server.listen(port, () => {
   const redisConfig = config.get('redis')
   const smsConfig = config.get<AlismsConfig>('alisms')
-  Promise.all([redisClient.initClient(redisConfig), initDB(), alisms.initAlicloud(smsConfig)]).catch((err) => {
+  Promise.all([
+    redisClient.initClient(redisConfig),
+    initDB(),
+    alisms.initAlicloud(smsConfig),
+  ]).catch((err) => {
     console.error(err)
   })
   console.info('Init Success')

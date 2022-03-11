@@ -18,7 +18,9 @@ export default async function (req: Request, res: Response) {
       ret = await srv.loginSmsAct(req)
     } else if (method === 'signinBySms') {
       ret = await srv.signinBySmsAct(req)
-    } 
+    } else if (method === 'signout') {
+      ret = await srv.signoutAct(req)
+    }
 
     common.sendData(res, ret)
   } catch (error) {

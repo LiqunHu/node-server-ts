@@ -24,7 +24,7 @@ export default {
       tags: ['Auth'],
       path: '/api/auth/captcha',
       type: 'post',
-      JoiSchema: {}
+      JoiSchema: {},
     },
     loginSms: {
       name: '获取登陆短信验证码',
@@ -50,9 +50,17 @@ export default {
         body: {
           login_type: Joi.string().allow('WEB', 'MOBILE'),
           user_phone: Joi.string().regex(/^1[3|4|5|6|7|8|9]\d{9}$/),
-          code: Joi.string()
-        }
-      }
+          code: Joi.string(),
+        },
+      },
+    },
+    signout: {
+      name: '登出',
+      enname: 'Authsignout',
+      tags: ['Auth'],
+      path: '/api/node/auth/signout',
+      type: 'post',
+      JoiSchema: {}
     },
   },
 }

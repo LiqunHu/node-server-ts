@@ -224,6 +224,16 @@ async function signinBySmsAct(req: Request) {
   }
 }
 
+async function signoutAct(req: Request) {
+  let tokenData = await authority.tokenVerify(req)
+  if (tokenData) {
+    let type = tokenData.type,
+      user_id = tokenData.user_id
+    await redisClient.del([GLBConfig.REDIS_KEYS.AUTH, type, user_id].join('_'))
+  }
+  return common.success()
+}
+
 async function loginInit(
   user: common_user,
   session_token: string,
@@ -694,4 +704,5 @@ export default {
   captchaAct,
   loginSmsAct,
   signinBySmsAct,
+  signoutAct,
 }

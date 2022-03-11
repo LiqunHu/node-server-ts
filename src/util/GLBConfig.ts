@@ -3,7 +3,7 @@ export default {
   REDIS_KEYS: {
     AUTH: 'AUTH',
     SMS: 'SMS',
-    CAPTCHA: 'CAPTCHA'
+    CAPTCHA: 'CAPTCHA',
   },
   NODE_TYPE: {
     NODE_ROOT: '00',
