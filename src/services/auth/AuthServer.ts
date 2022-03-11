@@ -5,6 +5,7 @@ import config from 'config'
 import { redisClient, authority, alisms } from 'node-srv-utils'
 import svgCaptcha from 'svg-captcha'
 import { v1 as uuidV1 } from 'uuid'
+import phone from 'phone'
 import { simpleSelect } from '@app/db'
 import common from '@util/Common'
 import GLBConfig from '@util/GLBConfig'
@@ -232,6 +233,168 @@ async function signoutAct(req: Request) {
     await redisClient.del([GLBConfig.REDIS_KEYS.AUTH, type, user_id].join('_'))
   }
   return common.success()
+}
+
+async function userExistAct(req: Request) {
+  let doc = common.docValidate(req)
+  let user = await common_user.findOne({
+    where: [
+      { user_phone: doc.user_username },
+      { user_username: doc.user_username },
+    ],
+  })
+  if (user) {
+    return common.error('auth_02')
+  } else {
+    return common.success()
+  }
+}
+
+async function registerSmsAct(req: Request) {
+  let doc = common.docValidate(req),
+    msgphone = ''
+
+  if (!doc.key) {
+    return common.error('auth_04')
+  }
+  if (!doc.code) {
+    return common.error('auth_04')
+  }
+  let captchaData = await redisClient.get(doc.key)
+  if (!captchaData) {
+    return common.error('auth_04')
+  }
+
+  if (captchaData.code.toUpperCase() !== doc.code.toUpperCase()) {
+    return common.error('auth_04')
+  }
+
+  let phoneCheck = phone('+' + doc.country_code + doc.user_phone)
+  if (!phoneCheck.isValid) {
+    return common.error('auth_13')
+  }
+
+  if (phoneCheck.countryCode === 'CHN') {
+    // 中国
+    if (doc.country_code !== '86') {
+      return common.error('auth_13')
+    }
+    msgphone = doc.user_phone
+  } else {
+    return common.error('auth_13')
+  }
+
+  let code = common.generateRandomAlphaNum(4)
+  if (process.env.NODE_ENV === 'dev') {
+    code = '1111'
+  }
+  let smsExpiredTime = config.get<number>('security.SMS_TOKEN_AGE')
+  let key = [GLBConfig.REDIS_KEYS.SMS, msgphone].join('_')
+
+  let liveTime = await redisClient.ttl(key)
+  logger.debug(liveTime)
+  logger.debug(code)
+  logger.debug(msgphone)
+  if (liveTime > 0) {
+    if (smsExpiredTime - liveTime < 70) {
+      return common.error('auth_06')
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'dev') {
+    try {
+      await alisms.sendSms({
+        PhoneNumbers: msgphone,
+        SignName: '京瀚科技',
+        TemplateCode: 'SMS_175580288',
+        TemplateParam: JSON.stringify({
+          code: code,
+        }),
+      })
+    } catch (error) {
+      logger.error(error)
+      return common.error('auth_17')
+    }
+  }
+
+  await redisClient.set(
+    key,
+    {
+      code: code,
+    },
+    'EX',
+    smsExpiredTime
+  )
+
+  return common.success()
+}
+
+async function registerAct(req: Request) {
+  let doc = common.docValidate(req),
+    msgphone = ''
+  let user = await common_user.findOne({
+    where: [
+      { user_phone: doc.user_phone },
+      { user_username: doc.user_username },
+    ],
+  })
+  if (user) {
+    return common.error('auth_02')
+  } else {
+    if (doc.country_code === '86') {
+      msgphone = doc.user_phone
+    } else {
+      msgphone = doc.country_code + doc.user_phone
+    }
+
+    let smskey = [GLBConfig.REDIS_KEYS.SMS, msgphone].join('_')
+    let rdsData = await redisClient.get(smskey)
+
+    if (!rdsData) {
+      return common.error('auth_04')
+    } else if (doc.code != rdsData.code) {
+      return common.error('auth_04')
+    } else {
+      await redisClient.del(smskey)
+      let group = await common_usergroup.findOne({
+        usergroup_code: 'DEFAULT',
+      })
+
+      if (!group) {
+        return common.error('auth_10')
+      }
+
+      user = await common_user.create({
+        user_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
+        user_username: doc.user_username,
+        user_country_code: doc.country_code,
+        user_phone: doc.user_phone,
+        user_password: doc.user_password,
+        user_name: doc.user_name || '',
+      })
+
+      await common_user_groups.create({
+        user_id: user.user_id,
+        usergroup_id: group.usergroup_id,
+      })
+
+      // login
+      user = await common_user.findOne({
+        user_id: user.user_id,
+      })
+      if (!user) {
+        return common.error('auth_02')
+      }
+      let session_token = authority.user2token('WEB', user.user_id)
+      let loginData = await loginInit(user, session_token, 'WEB')
+      if (loginData) {
+        loginData.Authorization = session_token
+        return common.success(loginData)
+      } else {
+        return common.error('auth_03')
+      }
+    }
+  }
 }
 
 async function loginInit(
@@ -705,4 +868,7 @@ export default {
   loginSmsAct,
   signinBySmsAct,
   signoutAct,
+  userExistAct,
+  registerSmsAct,
+  registerAct,
 }

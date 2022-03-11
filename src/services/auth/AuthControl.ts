@@ -20,7 +20,13 @@ export default async function (req: Request, res: Response) {
       ret = await srv.signinBySmsAct(req)
     } else if (method === 'signout') {
       ret = await srv.signoutAct(req)
-    }
+    } else if (method === 'userExist') {
+      ret = await srv.userExistAct(req)
+    } else if (method === 'registerSms') {
+      ret = await srv.registerSmsAct(req)
+    } else if (method === 'register') {
+      ret = await srv.registerAct(req)
+    } 
 
     common.sendData(res, ret)
   } catch (error) {
