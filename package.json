@@ -30,10 +30,12 @@
     "log4js": "^6.4.1",
     "log4js-logstash-tcp": "^2.0.3",
     "mysql2": "^2.3.3",
-    "server-utils": "https://github.com/LiqunHu/server-utils-ts",
+    "node-srv-utils": "https://github.com/LiqunHu/node-srv-utils.git",
+    "svg-captcha": "^1.4.0",
     "typeorm": "0.2.42",
     "typeorm-naming-strategies": "^3.0.0",
-    "undici": "^4.14.1"
+    "undici": "^4.14.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.2",
@@ -44,6 +46,7 @@
     "@types/express": "^4.17.13",
     "@types/lodash": "^4.14.179",
     "@types/node": "^17.0.19",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.12.1",
     "@typescript-eslint/parser": "^5.12.1",
     "eslint": "^7.32.0",

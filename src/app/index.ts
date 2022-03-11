@@ -4,7 +4,7 @@ import path from 'path'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import config from 'config'
-import { authority, SecureConfig } from 'server-utils'
+import { authority, SecureConfig } from 'node-srv-utils'
 import { simpleSelect } from '@app/db'
 import routers from '@/routes'
 const app = express()

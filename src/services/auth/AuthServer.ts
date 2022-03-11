@@ -2,13 +2,16 @@ import { Request } from 'express'
 import _ from 'lodash'
 import dayjs from 'dayjs'
 import config from 'config'
-import { redisClient, authority } from 'server-utils'
+import { redisClient, authority, alisms } from 'node-srv-utils'
+import svgCaptcha from 'svg-captcha'
+import { v1 as uuidV1 } from 'uuid'
 import { simpleSelect } from '@app/db'
 import common from '@util/Common'
 import GLBConfig from '@util/GLBConfig'
 import {
   common_user,
   common_usergroup,
+  common_user_groups,
   common_user_wechat,
 } from '@entities/common'
 import { createLogger } from '@app/logger'
@@ -67,6 +70,157 @@ async function signinAct(req: Request) {
     }
   } else {
     return common.error('auth_19')
+  }
+}
+
+async function captchaAct() {
+  let captcha = svgCaptcha.create({
+    size: 4,
+    ignoreChars: '0o1i',
+    noise: 2,
+    color: true,
+  })
+
+  let code = captcha.text
+  if (process.env.NODE_ENV === 'dev') {
+    code = 'aaaa'
+  }
+
+  let key = GLBConfig.REDIS_KEYS.CAPTCHA + '_' + uuidV1().replace(/-/g, '')
+  await redisClient.set(
+    key,
+    {
+      code: code,
+    },
+    'EX',
+    config.get<number>('security.CAPTCHA_TOKEN_AGE')
+  )
+  logger.debug(code)
+
+  return common.success({ key: key, captcha: captcha.data })
+}
+
+async function loginSmsAct(req: Request) {
+  let doc = common.docValidate(req)
+
+  if (!doc.key) {
+    return common.error('auth_04')
+  }
+  if (!doc.code) {
+    return common.error('auth_04')
+  }
+  let captchaData = await redisClient.get(doc.key)
+  if (!captchaData) {
+    return common.error('auth_04')
+  }
+
+  if (captchaData.code.toUpperCase() !== doc.code.toUpperCase()) {
+    return common.error('auth_04')
+  }
+
+  let code = common.generateRandomAlphaNum(4)
+  if (process.env.NODE_ENV === 'dev') {
+    code = '1111'
+  }
+  let smsExpiredTime = config.get<number>('security.SMS_TOKEN_AGE')
+  let key = [GLBConfig.REDIS_KEYS.SMS, doc.user_phone].join('_')
+
+  let liveTime = await redisClient.ttl(key)
+  logger.debug(liveTime)
+  logger.debug(code)
+  if (liveTime > 0) {
+    if (smsExpiredTime - liveTime < 70) {
+      return common.error('auth_06')
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'dev') {
+    try {
+      await alisms.sendSms({
+        PhoneNumbers: doc.user_phone,
+        SignName: '京瀚科技',
+        TemplateCode: 'SMS_175580288',
+        TemplateParam: JSON.stringify({
+          code: code,
+        }),
+      })
+    } catch (error) {
+      logger.error(error)
+      return common.error('auth_17')
+    }
+  }
+
+  await redisClient.set(
+    key,
+    {
+      code: code,
+    },
+    'EX',
+    smsExpiredTime
+  )
+
+  return common.success()
+}
+
+async function signinBySmsAct(req: Request) {
+  let doc = common.docValidate(req)
+
+  let msgkey = [GLBConfig.REDIS_KEYS.SMS, doc.user_phone].join('_')
+  let rdsData = await redisClient.get(msgkey)
+
+  if (!rdsData) {
+    return common.error('auth_04')
+  } else if (doc.code !== rdsData.code) {
+    return common.error('auth_04')
+  } else {
+    let user = await common_user.findOne({
+      user_phone: doc.user_phone,
+    })
+
+    if (!user) {
+      let group = await common_usergroup.findOne({
+        usergroup_code: 'DEFAULT',
+      })
+
+      if (!group) {
+        return common.error('auth_10')
+      }
+
+      user = await common_user.create({
+        user_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
+        user_username: doc.user_phone,
+        user_phone: doc.user_phone,
+        user_password: common.generateRandomAlphaNum(6),
+        user_password_error: -1,
+      })
+
+      await common_user_groups.create({
+        user_id: user.user_id,
+        usergroup_id: group.usergroup_id,
+      })
+
+      user = await common_user.findOne({
+        where: {
+          user_id: user.user_id,
+        },
+      })
+    }
+
+    if (user) {
+      let session_token = authority.user2token(doc.login_type, user.user_id)
+      let loginData = await loginInit(user, session_token, doc.login_type)
+
+      if (loginData) {
+        loginData.Authorization = session_token
+        redisClient.del(msgkey)
+
+        user.user_login_time = new Date()
+        await user.save()
+        return common.success(loginData)
+      } else {
+        return common.error('auth_03')
+      }
+    }
   }
 }
 
@@ -537,4 +691,7 @@ async function recursionMenu(
 
 export default {
   signinAct,
+  captchaAct,
+  loginSmsAct,
+  signinBySmsAct,
 }

@@ -22,7 +22,6 @@ export async function initDB() {
     database: config.get<string>('mysql.database'),
     entities: ['src/entities/**/*.ts'],
     synchronize: false,
-    logging:true,
     logger: new Log4jsLogger(),
     namingStrategy: new SnakeNamingStrategy(),
   })

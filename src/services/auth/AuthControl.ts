@@ -12,7 +12,13 @@ export default async function (req: Request, res: Response) {
 
     if (method === 'signin') {
       ret = await srv.signinAct(req)
-    }
+    } else if (method === 'captcha') {
+      ret = await srv.captchaAct()
+    } else if (method === 'loginSms') {
+      ret = await srv.loginSmsAct(req)
+    } else if (method === 'signinBySms') {
+      ret = await srv.signinBySmsAct(req)
+    } 
 
     common.sendData(res, ret)
   } catch (error) {

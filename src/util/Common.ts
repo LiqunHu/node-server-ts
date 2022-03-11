@@ -34,7 +34,7 @@ async function reqTrans(req: Request, callFile: string) {
 }
 
 // common response
-function success(data: any) {
+function success(data?: any) {
   if (data) {
     return data
   } else {

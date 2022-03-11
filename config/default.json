@@ -1,14 +1,14 @@
 {
   "mysql": {
-    "host": "22222",
+    "host": "111",
     "port": 33306,
     "username": "root",
-    "password": "1111",
+    "password": "111",
     "database": "testdb",
     "logging": true
   },
   "redis": {
-    "host": "1111",
+    "host": "111",
     "port": 16379
   },
   "loggerConfig": {
@@ -31,9 +31,15 @@
     }
   },
   "security": {
-    "SECRET_KEY": "1111",
-    "TOKEN_AGE": 43200000,
-    "MOBILE_TOKEN_AGE": 31536000000,
-    "SYSTEM_TOKEN_AGE": 300000
+    "SECRET_KEY": "111",
+    "TOKEN_AGE": 43200,
+    "MOBILE_TOKEN_AGE": 31536000,
+    "SYSTEM_TOKEN_AGE": 43200,
+    "SMS_TOKEN_AGE": 300,
+    "CAPTCHA_TOKEN_AGE": 60
+  },
+  "alisms": {
+    "accessKeyId": "111",
+    "accessKeySecret": "111"
   }
 }

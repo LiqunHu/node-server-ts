@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { redisClient } from 'server-utils'
+import { redisClient } from 'node-srv-utils'
 import { createLogger } from '@app/logger'
 import common from '@util/Common'
 import { common_user } from '@/entities/common/common_user'
