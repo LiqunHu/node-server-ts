@@ -31,6 +31,7 @@
     "log4js-logstash-tcp": "^2.0.3",
     "mysql2": "^2.3.3",
     "node-srv-utils": "https://github.com/LiqunHu/node-srv-utils.git",
+    "phone": "^3.1.13",
     "svg-captcha": "^1.4.0",
     "typeorm": "0.2.42",
     "typeorm-naming-strategies": "^3.0.0",
