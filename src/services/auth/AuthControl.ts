@@ -26,7 +26,7 @@ export default async function (req: Request, res: Response) {
       ret = await srv.registerSmsAct(req)
     } else if (method === 'register') {
       ret = await srv.registerAct(req)
-    } 
+    }
 
     common.sendData(res, ret)
   } catch (error) {
