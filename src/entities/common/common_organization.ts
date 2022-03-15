@@ -13,7 +13,7 @@ export class common_organization extends common_entity {
   organization_type: string
 
   @Column({ nullable: true, comment: '机构模板ID' })
-  organization_template_id: number
+  organizationtemplate_id: number
 
   @Column({ default: '', length: 50, comment: '机构名称' })
   organization_name: string

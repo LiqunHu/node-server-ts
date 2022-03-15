@@ -29,6 +29,10 @@ export default {
       text: '叶子',
     },
   ],
+  ORG_TYPE: {
+    TYPE_SYSTEM: '00',
+    TYPE_DEFAULT: '01'
+  },
   USER_TYPE: {
     TYPE_DEFAULT: '00',
     TYPE_ADMINISTRATOR: '01',
