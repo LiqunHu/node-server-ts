@@ -463,18 +463,20 @@ async function loginInit(
 
     let groups = await simpleSelect(
       `SELECT
-        usergroup_id
+      a.usergroup_id,
+      b.usergroup_code 
+    FROM
+      tbl_common_user_groups a
+      LEFT JOIN tbl_common_usergroup b ON a.usergroup_id = b.usergroup_id 
+    WHERE
+      a.user_id = ? 
+      AND a.usergroup_id IN (
+      SELECT
+        usergroup_id 
       FROM
-        tbl_common_user_groups
+        tbl_common_usergroup 
       WHERE
-        user_id = ?
-      AND usergroup_id IN(
-        SELECT
-          usergroup_id
-        FROM
-          tbl_common_usergroup a
-        WHERE
-          organization_id IN(?)
+      organization_id IN ( ? ) 
       )`,
       [user.user_id, orgs]
     )
@@ -484,18 +486,8 @@ async function loginInit(
       returnData.groups = []
       for (let g of groups) {
         gids.push(g.usergroup_id)
-        let usergroup = await common_usergroup.findOne({
-          usergroup_id: g.usergroup_id,
-        })
-        if (usergroup && usergroup.usergroup_code) {
-          returnData.groups.push(usergroup.usergroup_code)
-        }
+        returnData.groups.push(g.usergroup_code)
       }
-      // if (type === 'MOBILE' || type === 'WEIXIN') {
-      //   returnData.menulist = await genDashboard(gids)
-      // } else {
-      //   returnData.menulist = await iterationMenu(user, gids, '0')
-      // }
 
       returnData.menulist = await iterationMenu(user, gids)
 
