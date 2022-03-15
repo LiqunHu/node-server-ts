@@ -33,9 +33,37 @@ export async function simpleSelect(queryStr: string, replacements?: any[]) {
   return result
 }
 
-// export async function queryWithCount () => {
+interface pageInfo {
+  offset?: number
+  limit?: number
+}
+export async function queryWithCount(
+  pageDoc: pageInfo,
+  queryStr: string,
+  replacements?: any[]
+) {
+  let queryStrCnt = ''
+  let lowerStr = queryStr.replace(/\n/g, ' ').toLowerCase()
+  if (lowerStr.indexOf('group by') >= 0) {
+    queryStrCnt = 'select count(1) num from ( ' + lowerStr + ' ) temp'
+  } else {
+    let cnt = lowerStr.indexOf('from') + 5
+    queryStrCnt = 'select count(1) num from ' + lowerStr.substring(cnt)
+  }
+  const entityManager = getManager()
+  let count = await entityManager.query(queryStrCnt, replacements)
 
-// }
+  let rep = replacements || []
+  rep.push(pageDoc.offset || 0)
+  rep.push(pageDoc.limit || 100)
+
+  let queryRst = await entityManager.query(queryStr + ' LIMIT ?,?', rep)
+
+  return {
+    count: count[0].num,
+    data: queryRst,
+  }
+}
 // module.exports.queryWithCount = async (pageDoc, queryStr, replacements) => {
 //   let queryStrCnt = ''
 //   let lowerStr = queryStr.toLowerCase()

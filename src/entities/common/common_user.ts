@@ -56,13 +56,13 @@ export class common_user extends common_entity {
   @Column({ length: 20, default: '', comment: '市/县' })
   user_city: string
 
-  @Column({ length: 100, default: '', comment: '区' })
+  @Column({ length: 20, default: '', comment: '区' })
   user_district: string
 
-  @Column({ length: 32, default: '', comment: '地址' })
+  @Column({ length: 100, default: '', comment: '地址' })
   user_address: string
 
-  @Column({ length: 200, default: '', comment: '邮编' })
+  @Column({ length: 20, default: '', comment: '邮编' })
   user_zipcode: string
 
   @Column({ length: 200, default: '', comment: '公司' })
