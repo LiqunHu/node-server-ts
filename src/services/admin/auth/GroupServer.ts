@@ -223,13 +223,13 @@ async function removeAct(req: Request) {
   if (usergroup) {
     if (usergroup.node_type === '01') {
       await common_user_groups.delete({
-        usergroup_id: usergroup.usergroup_id
+        usergroup_id: usergroup.usergroup_id,
       })
 
       await common_usergroupmenu.delete({
-        usergroup_id: usergroup.usergroup_id
+        usergroup_id: usergroup.usergroup_id,
       })
-      
+
       await usergroup.remove()
       return common.success()
     } else {

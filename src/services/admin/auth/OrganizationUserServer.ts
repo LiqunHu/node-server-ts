@@ -190,8 +190,8 @@ async function modifyAct(req: Request) {
       await modiuser.save()
 
       let domaingroups = await common_usergroup.find({
-          organization_id: user.default_organization,
-          node_type: '01',
+        organization_id: user.default_organization,
+        node_type: '01',
       })
 
       let ids = []
@@ -200,8 +200,8 @@ async function modifyAct(req: Request) {
       }
 
       await common_user_groups.delete({
-          user_id: modiuser.user_id,
-          usergroup_id: In(ids)
+        user_id: modiuser.user_id,
+        usergroup_id: In(ids),
       })
 
       for (let gid of doc.user_groups) {
@@ -230,15 +230,15 @@ async function deleteAct(req: Request) {
   }
 
   let orguser = await common_organization_user.findOne({
-      organization_id: user.default_organization,
-      user_id: doc.user_id,
+    organization_id: user.default_organization,
+    user_id: doc.user_id,
   })
 
   if (orguser) {
     if (orguser.organization_user_default_flag === '1') {
       await orguser.remove()
       let dforguser = await common_organization_user.findOne({
-          user_id: doc.user_id,
+        user_id: doc.user_id,
       })
       if (dforguser) {
         dforguser.organization_user_default_flag = '1'
@@ -257,5 +257,5 @@ export default {
   searchAct,
   addAct,
   modifyAct,
-  deleteAct
+  deleteAct,
 }

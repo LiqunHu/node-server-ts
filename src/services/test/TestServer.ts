@@ -11,9 +11,12 @@ async function searchAct(req: Request) {
   logger.info(user)
   logger.debug('search')
   const cuser = await common_user.findOne({
-    user_id: '00202780d08011eaa30bdd5d2522ca2c',
+    user_id: '00b8dcf029eb11ea9e23c9601c77fc6e',
   })
   logger.debug(cuser)
+  await common_user.delete({
+    user_id: '00b8dcf029eb11ea9e23c9601c77fc6e',
+  })
 
   const result = await simpleSelect(
     'select * from tbl_common_user where user_id = ?',
