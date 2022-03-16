@@ -197,7 +197,7 @@ async function addAct(req: Request) {
     }
   }
 
-  common.success(usergroup)
+  return common.success(usergroup)
 }
 
 async function modifyAct(req: Request) {

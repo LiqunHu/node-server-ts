@@ -51,6 +51,5 @@ const errorList: { [index: string]: any } = {
   org_01: '机构已存在',
   org_02: '用户没有默认机构',
   org_03: '用户不属于该机构',
-  
 }
 export default errorList
