@@ -31,7 +31,7 @@ export default {
   ],
   ORG_TYPE: {
     TYPE_SYSTEM: '00',
-    TYPE_DEFAULT: '01'
+    TYPE_DEFAULT: '01',
   },
   USER_TYPE: {
     TYPE_DEFAULT: '00',
