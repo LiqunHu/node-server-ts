@@ -2,7 +2,7 @@ import { Request } from 'express'
 import _ from 'lodash'
 import common from '@util/Common'
 import GLBConfig from '@util/GLBConfig'
-import { simpleSelect, queryWithCount } from '@app/db'
+import { simpleSelect } from '@app/db'
 import {
   common_organizationtemplate,
   common_templatemenu,

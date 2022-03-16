@@ -210,9 +210,9 @@ async function modifyAct(req: Request) {
     await usergroup.save()
 
     if (usergroup.node_type === '01') {
-      let usergroupmenu = new common_usergroupmenu()
-      usergroupmenu.usergroup_id = doc.usergroup_id
-      await usergroupmenu.remove()
+      await common_usergroupmenu.delete({
+        usergroup_id: doc.usergroup_id
+      })
 
       for (let m of doc.menus) {
         await common_usergroupmenu.create({

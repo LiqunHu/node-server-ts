@@ -199,9 +199,9 @@ async function modifyAct(req: Request) {
     let existids = []
     for (let g of groups) {
       if (doc.new.user_groups.indexOf(g.usergroup_id) < 0) {
-        let userGroups = new common_user_groups()
-        userGroups.user_groups_id = g.user_groups_id
-        await userGroups.remove()
+        await common_user_groups.delete({
+          user_groups_id: g.user_groups_id
+        })
       } else {
         existids.push(g.usergroup_id)
       }
