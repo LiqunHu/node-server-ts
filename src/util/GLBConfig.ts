@@ -4,7 +4,7 @@ export default {
     AUTH: 'AUTH',
     SMS: 'SMS',
     CAPTCHA: 'CAPTCHA',
-    AUTHAPI: 'AUTHAPI'
+    AUTHAPI: 'AUTHAPI',
   },
   NODE_TYPE: {
     NODE_ROOT: '00',

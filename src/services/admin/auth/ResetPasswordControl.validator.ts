@@ -11,9 +11,9 @@ export default {
       type: 'post',
       JoiSchema: {
         body: {
-          search_text: Joi.string().empty('').max(50)
-        }
-      }
+          search_text: Joi.string().empty('').max(50),
+        },
+      },
     },
     reset: {
       name: '重置密码',
@@ -25,9 +25,9 @@ export default {
         body: {
           user_id: Joi.string().max(50),
           version: Joi.number().integer(),
-          updated_at: Joi.string().max(50)
-        }
-      }
-    }
-  }
+          updated_at: Joi.string().max(50),
+        },
+      },
+    },
+  },
 }

@@ -11,12 +11,11 @@
     "debug": "node --inspect=0.0.0.0:9229 --use-strict ./bin/www",
     "genswagger": "rimraf ./public/swagger/swagger.json && joi-swagger-generator -r -v ./services/ -h ./public/swagger/header.json -o ./public/swagger/swagger.json",
     "test": "mocha --recursive --watch --slow 300",
-    "lint": "eslint \"src/**/*.{js,ts}\"",
+    "lint": "eslint \"src/**/*.{js,ts}\" --fix",
     "format": "prettier --write  \"src/**/*\"",
     "createTable": "ts-node ./src/bin/createTable.ts"
   },
   "pre-commit": [
-    "format",
     "lint"
   ],
   "dependencies": {

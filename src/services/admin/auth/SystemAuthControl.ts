@@ -11,7 +11,7 @@ export default async function (req: Request, res: Response) {
     logger.debug(method)
     if (method === 'genSystemToken') {
       ret = await srv.genSystemTokenAct(req)
-    } 
+    }
 
     common.sendData(res, ret)
   } catch (error) {
