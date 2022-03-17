@@ -33,6 +33,7 @@
       "@/*": ["*"],
       "@app/*": ["app/*"],
       "@services/*": ["services/*"],
+      "@schedule/*": ["schedule/*"],
       "@entities/*": ["entities/*"],
       "@util/*": ["util/*"]
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,

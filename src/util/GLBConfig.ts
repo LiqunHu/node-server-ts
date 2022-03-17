@@ -4,6 +4,7 @@ export default {
     AUTH: 'AUTH',
     SMS: 'SMS',
     CAPTCHA: 'CAPTCHA',
+    AUTHAPI: 'AUTHAPI'
   },
   NODE_TYPE: {
     NODE_ROOT: '00',
@@ -36,6 +37,7 @@ export default {
   USER_TYPE: {
     TYPE_DEFAULT: '00',
     TYPE_ADMINISTRATOR: '01',
+    TYPE_SYSTEM: '02',
   },
   AUTH: '1',
   NOAUTH: '0',

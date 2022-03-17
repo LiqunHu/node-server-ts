@@ -2,7 +2,7 @@ import { Request } from 'express'
 import _ from 'lodash'
 import common from '@util/Common'
 import GLBConfig from '@util/GLBConfig'
-import { simpleSelect, queryWithCount } from '@app/db'
+import { simpleSelect } from '@app/db'
 import {
   common_organization,
   common_usergroup,
@@ -237,11 +237,11 @@ async function removeAct(req: Request) {
   if (usergroup) {
     if (usergroup.node_type === '01') {
       await common_user_groups.delete({
-        usergroup_id: usergroup.usergroup_id
+        usergroup_id: usergroup.usergroup_id,
       })
 
       await common_usergroupmenu.delete({
-        usergroup_id: usergroup.usergroup_id
+        usergroup_id: usergroup.usergroup_id,
       })
 
       await usergroup.remove()

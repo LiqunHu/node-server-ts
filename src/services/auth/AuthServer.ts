@@ -863,4 +863,5 @@ export default {
   userExistAct,
   registerSmsAct,
   registerAct,
+  loginInit,
 }

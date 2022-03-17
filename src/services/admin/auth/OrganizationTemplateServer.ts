@@ -126,11 +126,11 @@ async function removeTemplateAct(req: Request) {
   let doc = common.docValidate(req)
 
   await common_templatemenu.delete({
-    organizationtemplate_id: doc.organizationtemplate_id
+    organizationtemplate_id: doc.organizationtemplate_id,
   })
 
   await common_organizationtemplate.delete({
-    organizationtemplate_id: doc.organizationtemplate_id
+    organizationtemplate_id: doc.organizationtemplate_id,
   })
 
   return common.success()
