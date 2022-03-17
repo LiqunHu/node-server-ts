@@ -3,6 +3,7 @@ import http from 'http'
 import { AddressInfo } from 'net'
 import config from 'config'
 import { redisClient, AlismsConfig, alisms } from 'node-srv-utils'
+import refreshRedis from '@schedule/refreshRedis'
 import app from './app'
 import { initDB } from './app/db'
 
@@ -52,16 +53,18 @@ const onListening = () => {
 /**
  * Listen on provided port, on all network interfaces.
  */
-server.listen(port, () => {
-  const redisConfig = config.get('redis')
-  const smsConfig = config.get<AlismsConfig>('alisms')
-  Promise.all([
-    redisClient.initClient(redisConfig),
-    initDB(),
-    alisms.initAlicloud(smsConfig),
-  ]).catch((err) => {
-    console.error(err)
-  })
+server.listen(port, async () => {
+  try {
+    const redisConfig = config.get('redis')
+    const smsConfig = config.get<AlismsConfig>('alisms')
+    await redisClient.initClient(redisConfig)
+    await initDB()
+    alisms.initAlicloud(smsConfig)
+
+    await refreshRedis.refreshRedis()
+  } catch (error) {
+    console.error(error)
+  }
   console.info('Init Success')
 })
 server.on('error', onError)
