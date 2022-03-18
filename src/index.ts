@@ -2,8 +2,15 @@
 import http from 'http'
 import { AddressInfo } from 'net'
 import config from 'config'
-import { redisClient, AlismsConfig, alisms } from 'node-srv-utils'
+import {
+  redisClient,
+  AlismsConfig,
+  alisms,
+  scheduleConfig,
+  scheduleJob,
+} from 'node-srv-utils'
 import refreshRedis from '@schedule/refreshRedis'
+import schedule from '@schedule/index'
 import app from './app'
 import { initDB } from './app/db'
 
@@ -61,6 +68,8 @@ server.listen(port, async () => {
     await initDB()
     alisms.initAlicloud(smsConfig)
 
+    const shConfig = config.get<scheduleConfig[]>('scheduleJobs')
+    await scheduleJob.initSchedule(shConfig, schedule)
     await refreshRedis.refreshRedis()
   } catch (error) {
     console.error(error)

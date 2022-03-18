@@ -4,7 +4,7 @@
     "port": 33306,
     "username": "root",
     "password": "111",
-    "database": "testdb",
+    "database": "111",
     "logging": true
   },
   "redis": {
@@ -38,6 +38,7 @@
     "SMS_TOKEN_AGE": 300,
     "CAPTCHA_TOKEN_AGE": 60
   },
+  "scheduleJobs": [{ "name": "refreshRedis", "rule": "0 0 * * * *" }],
   "alisms": {
     "accessKeyId": "111",
     "accessKeySecret": "111"
