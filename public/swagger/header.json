@@ -1,0 +1,29 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Auth/Admin Service",
+    "description": "Auth/Admin Service",
+    "version": "1.0.0",
+    "contact": {
+      "email": "huliquns@126.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "/v1",
+      "description": "dev"
+    }
+  ],
+  "security": [{ "ApiKeyAuth": [] }],
+  "paths": {},
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+      }
+    },
+    "schemas": {}
+  }
+}
