@@ -101,9 +101,16 @@ function sendFault(res: any, msg: any) {
         msg: msg.stack,
       }
     } else {
-      sendData = {
-        errno: -1,
-        msg: 'Internal Error',
+      if (msg.name === 'ValidationError') {
+        sendData = {
+          errno: -3,
+          msg: msg.stack,
+        }
+      } else {
+        sendData = {
+          errno: -1,
+          msg: 'Internal Error',
+        }
       }
     }
     res.status(500).send(sendData)
