@@ -2,7 +2,9 @@
 import http from 'http'
 import { AddressInfo } from 'net'
 import config from 'config'
+import { createLogger } from '@app/logger'
 import {
+  setLogger,
   redisClient,
   AlismsConfig,
   alisms,
@@ -62,6 +64,7 @@ const onListening = () => {
  */
 server.listen(port, async () => {
   try {
+    setLogger(createLogger)
     const redisConfig = config.get('redis')
     const smsConfig = config.get<AlismsConfig>('alisms')
     await redisClient.initClient(redisConfig)
