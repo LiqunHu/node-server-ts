@@ -26,11 +26,8 @@ async function initAct() {
 async function searchAct() {
   let menus = [
     {
-      systemmenu_id: 0,
       name: '根目录',
-      isParent: true,
-      title: '根目录',
-      expand: true,
+      systemmenu_id: 0,
       node_type: GLBConfig.NODE_TYPE.NODE_ROOT,
       children: [],
     },
@@ -59,14 +56,10 @@ async function genMenu(parentId: string): Promise<any> {
     if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT) {
       sub_menus = await genMenu(m.systemmenu_id)
       return_list.push({
+        name: m.systemmenu_name,
         systemmenu_id: m.systemmenu_id,
         systemmenu_name: m.systemmenu_name,
         systemmenu_icon: m.systemmenu_icon,
-        node_type: m.node_type,
-        name: m.systemmenu_name,
-        isParent: true,
-        title: m.systemmenu_name,
-        expand: true,
         parent_id: m.parent_id,
         children: sub_menus,
       })
@@ -78,6 +71,7 @@ async function genMenu(parentId: string): Promise<any> {
         name = m.systemmenu_name
       }
       return_list.push({
+        name: name,
         systemmenu_id: m.systemmenu_id,
         systemmenu_name: m.systemmenu_name,
         api_id: m.api_id,
@@ -87,9 +81,6 @@ async function genMenu(parentId: string): Promise<any> {
         auth_flag: m.auth_flag,
         api_remark: m.api_remark,
         node_type: m.node_type,
-        name: name,
-        title: name,
-        isParent: false,
         parent_id: m.parent_id,
       })
     }
