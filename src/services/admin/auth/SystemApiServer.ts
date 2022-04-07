@@ -104,7 +104,7 @@ async function addFolderAct(req: Request) {
       systemmenu_icon: doc.systemmenu_icon,
       node_type: '00', //NODETYPEINFO
       parent_id: doc.parent_id,
-    })
+    }).save()
 
     return common.success()
   }
@@ -168,14 +168,14 @@ async function addMenuAct(req: Request) {
       api_path: api_path,
       api_function: api_function,
       auth_flag: auth_flag,
-    })
+    }).save()
 
     await common_systemmenu.create({
       systemmenu_name: doc.systemmenu_name,
       api_id: api.api_id,
       node_type: '01', //NODETYPEINFO
       parent_id: doc.parent_id,
-    })
+    }).save()
 
     await refreshRedis.refreshRedis()
   }

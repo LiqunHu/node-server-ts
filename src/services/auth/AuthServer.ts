@@ -193,12 +193,12 @@ async function signinBySmsAct(req: Request) {
         user_phone: doc.user_phone,
         user_password: common.generateRandomAlphaNum(6),
         user_password_error: -1,
-      })
+      }).save()
 
       await common_user_groups.create({
         user_id: user.user_id,
         usergroup_id: group.usergroup_id,
-      })
+      }).save()
 
       user = await common_user.findOne({
         where: {
@@ -371,12 +371,12 @@ async function registerAct(req: Request) {
         user_phone: doc.user_phone,
         user_password: doc.user_password,
         user_name: doc.user_name || '',
-      })
+      }).save()
 
       await common_user_groups.create({
         user_id: user.user_id,
         usergroup_id: group.usergroup_id,
-      })
+      }).save()
 
       // login
       user = await common_user.findOne({

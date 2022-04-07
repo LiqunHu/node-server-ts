@@ -172,14 +172,14 @@ async function addAct(req: Request) {
     usergroup_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
     node_type: doc.node_type,
     parent_id: doc.parent_id,
-  })
+  }).save()
 
   if (doc.node_type === '01') {
     for (let m of doc.menus) {
       await common_usergroupmenu.create({
         usergroup_id: usergroup.usergroup_id,
         menu_id: m.menu_id,
-      })
+      }).save()
     }
   }
 
@@ -204,7 +204,7 @@ async function modifyAct(req: Request) {
         await common_usergroupmenu.create({
           usergroup_id: usergroup.usergroup_id,
           menu_id: m.menu_id,
-        })
+        }).save()
       }
     }
     logger.debug('modify success')

@@ -117,7 +117,7 @@ async function addTemplateAct(req: Request) {
   } else {
     await common_organizationtemplate.create({
       organizationtemplate_name: doc.organizationtemplate_name,
-    })
+    }).save()
     return common.success()
   }
 }
@@ -235,7 +235,7 @@ async function addFolderAct(req: Request) {
     templatemenu_icon: doc.templatemenu_icon,
     node_type: '00',
     parent_id: doc.parent_id,
-  })
+  }).save()
 
   return common.success()
 }
@@ -262,7 +262,7 @@ async function addMenusAct(req: Request) {
       api_id: i.api_id,
       node_type: '01',
       parent_id: doc.parent_id,
-    })
+    }).save()
   }
 
   return common.success()

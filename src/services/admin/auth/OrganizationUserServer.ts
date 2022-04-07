@@ -137,7 +137,7 @@ async function addAct(req: Request) {
         organization_id: user.default_organization,
         user_id: doc.user_id,
         organization_user_default_flag: '1',
-      })
+      }).save()
     }
   }
   return common.success()
@@ -208,7 +208,7 @@ async function modifyAct(req: Request) {
         await common_user_groups.create({
           user_id: modiuser.user_id,
           usergroup_id: gid,
-        })
+        }).save()
       }
 
       logger.debug('modify success')

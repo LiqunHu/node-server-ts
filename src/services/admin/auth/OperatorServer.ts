@@ -127,13 +127,13 @@ async function addAct(req: Request) {
       user_gender: doc.user_gender,
       user_address: doc.user_address,
       user_zipcode: doc.user_zipcode,
-    })
+    }).save()
 
     for (let gid of doc.user_groups) {
       await common_user_groups.create({
         user_id: adduser.user_id,
         usergroup_id: gid,
-      })
+      }).save()
     }
 
     let returnData = JSON.parse(JSON.stringify(adduser))
@@ -212,7 +212,7 @@ async function modifyAct(req: Request) {
         await common_user_groups.create({
           user_id: modiuser.user_id,
           usergroup_id: gid,
-        })
+        }).save()
       }
     }
 

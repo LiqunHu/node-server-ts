@@ -146,7 +146,7 @@ async function addAct(req: Request) {
       organization_name: doc.organization_name,
       organization_code: doc.organization_code,
       organizationtemplate_id: doc.organizationtemplate_id,
-    })
+    }).save()
 
     if (doc.organizationtemplate_id) {
       await createOrganizationMenu(
@@ -162,13 +162,13 @@ async function addAct(req: Request) {
       user_username: doc.organization_code + 'admin',
       user_password: 'admin',
       user_name: doc.organization_name,
-    })
+    }).save()
 
     await common_organization_user.create({
       organization_id: org.organization_id,
       user_id: adduser.user_id,
       organization_user_default_flag: '1',
-    })
+    }).save()
 
     let group = await common_usergroup.findOne({
       usergroup_code: 'DEFAULT',
@@ -177,7 +177,7 @@ async function addAct(req: Request) {
       await common_user_groups.create({
         user_id: adduser.user_id,
         usergroup_id: group.usergroup_id,
-      })
+      }).save()
     }
   }
   return common.success()
@@ -203,7 +203,7 @@ async function createOrganizationMenu(
         api_id: m.api_id,
         node_type: m.node_type,
         parent_id: cparentId,
-      })
+      }).save()
       await createOrganizationMenu(
         organization_id,
         organizationtemplate_id,
@@ -219,7 +219,7 @@ async function createOrganizationMenu(
         api_id: m.api_id,
         node_type: m.node_type,
         parent_id: cparentId,
-      })
+      }).save()
     }
   }
 }
@@ -322,7 +322,7 @@ async function addFolderAct(req: Request) {
     organizationmenu_icon: doc.organizationmenu_icon,
     node_type: '00',
     parent_id: doc.parent_id,
-  })
+  }).save()
 
   return common.success()
 }
@@ -349,7 +349,7 @@ async function addMenusAct(req: Request) {
       api_id: i.api_id,
       node_type: '01',
       parent_id: doc.parent_id,
-    })
+    }).save()
   }
 
   return common.success()
