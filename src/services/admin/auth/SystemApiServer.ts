@@ -60,6 +60,7 @@ async function genMenu(parentId: string): Promise<any> {
         systemmenu_id: m.systemmenu_id,
         systemmenu_name: m.systemmenu_name,
         systemmenu_icon: m.systemmenu_icon,
+        node_type: m.node_type,
         parent_id: m.parent_id,
         children: sub_menus,
       })
