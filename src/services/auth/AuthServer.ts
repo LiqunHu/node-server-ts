@@ -9,24 +9,14 @@ import phone from 'phone'
 import { simpleSelect } from '@app/db'
 import common from '@util/Common'
 import GLBConfig from '@util/GLBConfig'
-import {
-  common_user,
-  common_usergroup,
-  common_user_groups,
-  common_user_wechat,
-} from '@entities/common'
+import { common_user, common_usergroup, common_user_groups, common_user_wechat } from '@entities/common'
 import { createLogger } from '@app/logger'
 const logger = createLogger(__filename)
 
 async function signinAct(req: Request) {
   let doc = await common.docValidate(req)
 
-  if (
-    doc.login_type === 'WEB' ||
-    doc.login_type === 'ADMIN' ||
-    doc.login_type === 'MOBILE' ||
-    doc.login_type === 'SYSTEM'
-  ) {
+  if (doc.login_type === 'WEB' || doc.login_type === 'ADMIN' || doc.login_type === 'MOBILE' || doc.login_type === 'SYSTEM') {
     let user = await common_user.findOne({
       where: [
         { user_phone: doc.username, state: GLBConfig.ENABLE },
@@ -42,16 +32,9 @@ async function signinAct(req: Request) {
       return common.error('auth_03')
     }
 
-    let decrypted = authority.aesDecryptModeCFB(
-      doc.identify_code,
-      user.user_password,
-      doc.magic_no
-    )
+    let decrypted = authority.aesDecryptModeCFB(doc.identify_code, user.user_password, doc.magic_no)
 
-    if (
-      decrypted != '' &&
-      (decrypted === user.user_username || decrypted === user.user_phone)
-    ) {
+    if (decrypted != '' && (decrypted === user.user_username || decrypted === user.user_phone)) {
       let session_token = authority.user2token(doc.login_type, user.user_id)
       let loginData = await loginInit(user, session_token, doc.login_type)
 
@@ -187,18 +170,22 @@ async function signinBySmsAct(req: Request) {
         return common.error('auth_10')
       }
 
-      user = await common_user.create({
-        user_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
-        user_username: doc.user_phone,
-        user_phone: doc.user_phone,
-        user_password: common.generateRandomAlphaNum(6),
-        user_password_error: -1,
-      }).save()
+      user = await common_user
+        .create({
+          user_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
+          user_username: doc.user_phone,
+          user_phone: doc.user_phone,
+          user_password: common.generateRandomAlphaNum(6),
+          user_password_error: -1,
+        })
+        .save()
 
-      await common_user_groups.create({
-        user_id: user.user_id,
-        usergroup_id: group.usergroup_id,
-      }).save()
+      await common_user_groups
+        .create({
+          user_id: user.user_id,
+          usergroup_id: group.usergroup_id,
+        })
+        .save()
 
       user = await common_user.findOne({
         where: {
@@ -238,10 +225,7 @@ async function signoutAct(req: Request) {
 async function userExistAct(req: Request) {
   let doc = common.docValidate(req)
   let user = await common_user.findOne({
-    where: [
-      { user_phone: doc.user_username },
-      { user_username: doc.user_username },
-    ],
+    where: [{ user_phone: doc.user_username }, { user_username: doc.user_username }],
   })
   if (user) {
     return common.error('auth_02')
@@ -333,10 +317,7 @@ async function registerAct(req: Request) {
   let doc = common.docValidate(req),
     msgphone = ''
   let user = await common_user.findOne({
-    where: [
-      { user_phone: doc.user_phone },
-      { user_username: doc.user_username },
-    ],
+    where: [{ user_phone: doc.user_phone }, { user_username: doc.user_username }],
   })
   if (user) {
     return common.error('auth_02')
@@ -364,19 +345,23 @@ async function registerAct(req: Request) {
         return common.error('auth_10')
       }
 
-      user = await common_user.create({
-        user_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
-        user_username: doc.user_username,
-        user_country_code: doc.country_code,
-        user_phone: doc.user_phone,
-        user_password: doc.user_password,
-        user_name: doc.user_name || '',
-      }).save()
+      user = await common_user
+        .create({
+          user_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
+          user_username: doc.user_username,
+          user_country_code: doc.country_code,
+          user_phone: doc.user_phone,
+          user_password: doc.user_password,
+          user_name: doc.user_name || '',
+        })
+        .save()
 
-      await common_user_groups.create({
-        user_id: user.user_id,
-        usergroup_id: group.usergroup_id,
-      }).save()
+      await common_user_groups
+        .create({
+          user_id: user.user_id,
+          usergroup_id: group.usergroup_id,
+        })
+        .save()
 
       // login
       user = await common_user.findOne({
@@ -397,11 +382,7 @@ async function registerAct(req: Request) {
   }
 }
 
-async function loginInit(
-  user: common_user,
-  session_token: string,
-  type: string
-) {
+async function loginInit(user: common_user, session_token: string, type: string) {
   try {
     let returnData = Object.create(null)
     returnData.avatar = user.user_avatar
@@ -656,13 +637,11 @@ interface menuItem {
   show_flag?: string
   sub_menu?: menuItem[]
 }
-async function iterationMenu(
-  user: common_user,
-  groups: number[]
-): Promise<menuItem[]> {
+async function iterationMenu(user: common_user, groups: number[]): Promise<menuItem[]> {
   if (user.user_type === GLBConfig.USER_TYPE.TYPE_ADMINISTRATOR) {
     let return_list = new Array()
     return_list.push({
+      menu_id: 0,
       menu_type: GLBConfig.NODE_TYPE.NODE_ROOT,
       menu_name: '权限管理',
       menu_icon: 'fa-cogs',
@@ -670,48 +649,56 @@ async function iterationMenu(
     })
     if (user.user_username === 'admin') {
       return_list[0].sub_menu.push({
+        menu_id: 1,
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '系统菜单维护',
         menu_path: '/admin/auth/SystemApiControl',
       })
 
       return_list[0].sub_menu.push({
+        menu_id: 2,
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '角色组维护',
         menu_path: '/admin/auth/GroupControl',
       })
 
       return_list[0].sub_menu.push({
+        menu_id: 3,
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '用户维护',
         menu_path: '/admin/auth/OperatorControl',
       })
 
       return_list[0].sub_menu.push({
+        menu_id: 4,
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '机构模板维护',
         menu_path: '/admin/auth/OrganizationTemplateControl',
       })
 
       return_list[0].sub_menu.push({
+        menu_id: 5,
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '机构维护',
         menu_path: '/admin/auth/OrganizationControl',
       })
 
       return_list[0].sub_menu.push({
+        menu_id: 6,
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '重置密码',
         menu_path: '/admin/auth/ResetPassword',
       })
     } else {
       return_list[0].sub_menu.push({
+        menu_id: 7,
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '机构组织维护',
         menu_path: '/admin/auth/OrganizationGroupControl',
       })
 
       return_list[0].sub_menu.push({
+        menu_id: 8,
         menu_type: GLBConfig.NODE_TYPE.NODE_LEAF,
         menu_name: '机构用户维护',
         menu_path: '/admin/auth/OrganizationUserControl',
@@ -720,10 +707,7 @@ async function iterationMenu(
 
     return return_list
   } else {
-    let systemgroup = await simpleSelect(
-      'select usergroup_id from tbl_common_usergroup where organization_id = 0',
-      []
-    )
+    let systemgroup = await simpleSelect('select usergroup_id from tbl_common_usergroup where organization_id = 0', [])
     let sysgroup: number[] = []
     systemgroup.forEach((val: any) => {
       sysgroup.push(val.usergroup_id)
@@ -744,10 +728,7 @@ async function iterationMenu(
     return _.concat(sysMenus, menus)
   }
 }
-async function recursionSystemMenu(
-  groups: number[],
-  parent_id: string | number
-): Promise<menuItem[]> {
+async function recursionSystemMenu(groups: number[], parent_id: string | number): Promise<menuItem[]> {
   let return_list: menuItem[] = []
   let queryStr = `SELECT DISTINCT
         b.systemmenu_id menu_id ,
@@ -778,16 +759,15 @@ async function recursionSystemMenu(
 
     if (m.node_type === GLBConfig.NODE_TYPE.NODE_LEAF && m.api_path) {
       return_list.push({
+        menu_id: m.menu_id,
         menu_type: m.node_type,
         menu_name: m.menu_name,
         menu_path: m.api_path,
         menu_icon: m.menu_icon,
       })
-    } else if (
-      m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT &&
-      sub_menu.length > 0
-    ) {
+    } else if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT && sub_menu.length > 0) {
       return_list.push({
+        menu_id: m.menu_id,
         menu_type: m.node_type,
         menu_name: m.menu_name,
         menu_path: m.api_path,
@@ -799,10 +779,7 @@ async function recursionSystemMenu(
   return return_list
 }
 
-async function recursionMenu(
-  groups: number[],
-  parent_id: string | number
-): Promise<menuItem[]> {
+async function recursionMenu(groups: number[], parent_id: string | number): Promise<menuItem[]> {
   let return_list = []
   let queryStr = `SELECT DISTINCT
         b.organizationmenu_id menu_id ,
@@ -838,10 +815,7 @@ async function recursionMenu(
         menu_path: m.api_path,
         menu_icon: m.menu_icon,
       })
-    } else if (
-      m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT &&
-      sub_menu.length > 0
-    ) {
+    } else if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT && sub_menu.length > 0) {
       return_list.push({
         menu_type: m.node_type,
         menu_name: m.menu_name,
