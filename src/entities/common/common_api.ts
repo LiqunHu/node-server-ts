@@ -22,5 +22,5 @@ export class common_api extends common_entity {
   auth_flag: string
 
   @Column({ default: '', length: 30, comment: 'api 备注' })
-  parent_id: string
+  api_remark: string
 }
