@@ -32,7 +32,7 @@ async function signinAct(req: Request) {
       return common.error('auth_03')
     }
 
-    let decrypted = authority.aesDecryptModeCFB(doc.identify_code, user.user_password, doc.magic_no)
+    let decrypted = authority.aesDecryptModeECB(doc.identify_code, user.user_password)
 
     if (decrypted != '' && (decrypted === user.user_username || decrypted === user.user_phone)) {
       let session_token = authority.user2token(doc.login_type, user.user_id)
