@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
 import { common_entity } from '@/entities/common_entity'
 
-@Entity({ name: 'tbl_common_api' })
+@Entity({ name: 'tbl_common_organization_user' })
 export class common_organization_user extends common_entity {
   @PrimaryGeneratedColumn({ comment: '主键' })
   organization_user_id: number
