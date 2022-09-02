@@ -2,6 +2,7 @@
 mysql
 .idea
 node_modules
+redis-data
 dist
 .DS_Store
 .DS_Store?

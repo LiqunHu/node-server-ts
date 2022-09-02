@@ -20,7 +20,7 @@ export async function initDB() {
     username: config.get<string>('mysql.username'),
     password: config.get<string>('mysql.password'),
     database: config.get<string>('mysql.database'),
-    entities: ['dist/entities/**/*.{.ts,.js}', 'src/entities/**/*.{.ts,.js}'],
+    entities: [process.env.TYPEORM_ENTITIES as string],
     synchronize: false,
     logger: new Log4jsLogger(),
     namingStrategy: new SnakeNamingStrategy(),
