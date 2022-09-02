@@ -108,7 +108,7 @@ async function getTemplateAct(req: Request) {
 async function addTemplateAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let template = await common_organizationtemplate.findOne({
+  let template = await common_organizationtemplate.findOneBy({
     organizationtemplate_name: doc.organizationtemplate_name,
   })
 
@@ -243,7 +243,7 @@ async function addFolderAct(req: Request) {
 async function addMenusAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let menus = await common_templatemenu.find({
+  let menus = await common_templatemenu.findBy({
     organizationtemplate_id: doc.organizationtemplate_id,
     parent_id: doc.parent_id,
   })
@@ -271,7 +271,7 @@ async function addMenusAct(req: Request) {
 async function removeItemAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let item = await common_templatemenu.findOne({
+  let item = await common_templatemenu.findOneBy({
     templatemenu_id: doc.templatemenu_id,
   })
 
@@ -287,12 +287,12 @@ async function removeItemAct(req: Request) {
 }
 
 async function rmFolder(templatemenu_id: number) {
-  let folder = await common_templatemenu.findOne({
+  let folder = await common_templatemenu.findOneBy({
     templatemenu_id: templatemenu_id,
   })
 
   if (folder) {
-    let items = await common_templatemenu.find({
+    let items = await common_templatemenu.findBy({
       organizationtemplate_id: folder.organizationtemplate_id,
       parent_id: folder.templatemenu_id + '',
     })

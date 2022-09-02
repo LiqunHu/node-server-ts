@@ -2,11 +2,7 @@ import { Request } from 'express'
 import common from '@util/Common'
 import GLBConfig from '@util/GLBConfig'
 import { simpleSelect } from '@app/db'
-import {
-  common_usergroup,
-  common_usergroupmenu,
-  common_user_groups,
-} from '@entities/common'
+import { common_usergroup, common_usergroupmenu, common_user_groups } from '@entities/common'
 import { createLogger } from '@app/logger'
 const logger = createLogger(__filename)
 
@@ -102,7 +98,7 @@ async function searchAct() {
 }
 async function genUserGroup(parentId: string): Promise<any> {
   let return_list = []
-  let groups = await common_usergroup.find({
+  let groups = await common_usergroup.findBy({
     parent_id: parentId,
     organization_id: 0,
     usergroup_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
@@ -143,7 +139,7 @@ async function getCheckAct(req: Request) {
   let returnData = Object.create(null)
   returnData.groupMenu = []
 
-  let groupmenus = await common_usergroupmenu.find({
+  let groupmenus = await common_usergroupmenu.findBy({
     usergroup_id: doc.usergroup_id,
   })
   for (let item of groupmenus) {
@@ -156,7 +152,7 @@ async function addAct(req: Request) {
   let doc = common.docValidate(req)
 
   if (doc.node_type === '01') {
-    let gcode = await common_usergroup.findOne({
+    let gcode = await common_usergroup.findOneBy({
       usergroup_code: doc.usergroup_code,
     })
 
@@ -165,21 +161,25 @@ async function addAct(req: Request) {
     }
   }
 
-  let usergroup = await common_usergroup.create({
-    organization_id: 0,
-    usergroup_code: doc.usergroup_code,
-    usergroup_name: doc.usergroup_name,
-    usergroup_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
-    node_type: doc.node_type,
-    parent_id: doc.parent_id,
-  }).save()
+  let usergroup = await common_usergroup
+    .create({
+      organization_id: 0,
+      usergroup_code: doc.usergroup_code,
+      usergroup_name: doc.usergroup_name,
+      usergroup_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
+      node_type: doc.node_type,
+      parent_id: doc.parent_id,
+    })
+    .save()
 
   if (doc.node_type === '01') {
     for (let m of doc.menus) {
-      await common_usergroupmenu.create({
-        usergroup_id: usergroup.usergroup_id,
-        menu_id: m.menu_id,
-      }).save()
+      await common_usergroupmenu
+        .create({
+          usergroup_id: usergroup.usergroup_id,
+          menu_id: m.menu_id,
+        })
+        .save()
     }
   }
 
@@ -188,7 +188,7 @@ async function addAct(req: Request) {
 
 async function modifyAct(req: Request) {
   let doc = common.docValidate(req)
-  let usergroup = await common_usergroup.findOne({
+  let usergroup = await common_usergroup.findOneBy({
     usergroup_id: doc.usergroup_id,
   })
   if (usergroup) {
@@ -201,10 +201,12 @@ async function modifyAct(req: Request) {
       })
 
       for (let m of doc.menus) {
-        await common_usergroupmenu.create({
-          usergroup_id: usergroup.usergroup_id,
-          menu_id: m.menu_id,
-        }).save()
+        await common_usergroupmenu
+          .create({
+            usergroup_id: usergroup.usergroup_id,
+            menu_id: m.menu_id,
+          })
+          .save()
       }
     }
     logger.debug('modify success')
@@ -216,7 +218,7 @@ async function modifyAct(req: Request) {
 
 async function removeAct(req: Request) {
   let doc = common.docValidate(req)
-  let usergroup = await common_usergroup.findOne({
+  let usergroup = await common_usergroup.findOneBy({
     usergroup_id: doc.usergroup_id,
   })
 
@@ -233,10 +235,8 @@ async function removeAct(req: Request) {
       await usergroup.remove()
       return common.success()
     } else {
-      let chcount = await common_usergroup.count({
-        where: {
-          parent_id: usergroup.usergroup_id,
-        },
+      let chcount = await common_usergroup.countBy({
+        parent_id: usergroup.usergroup_id + '',
       })
 
       if (chcount > 0) {

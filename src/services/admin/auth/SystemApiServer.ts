@@ -91,10 +91,8 @@ async function genMenu(parentId: string): Promise<any> {
 
 async function addFolderAct(req: Request) {
   let doc = common.docValidate(req)
-  let folder = await common_systemmenu.findOne({
-    where: {
+  let folder = await common_systemmenu.findOneBy({
       systemmenu_name: doc.systemmenu_name,
-    },
   })
 
   if (folder) {
@@ -114,7 +112,7 @@ async function addFolderAct(req: Request) {
 async function modifyFolderAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let folder = await common_systemmenu.findOne({
+  let folder = await common_systemmenu.findOneBy({
     systemmenu_id: doc.systemmenu_id,
   })
 
@@ -132,17 +130,17 @@ async function modifyFolderAct(req: Request) {
 async function addMenuAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let afolder = await common_systemmenu.findOne({
+  let afolder = await common_systemmenu.findOneBy({
     systemmenu_name: doc.systemmenu_name,
   })
 
-  let aapi = await common_api.findOne({
+  let aapi = await common_api.findOneBy({
     api_name: doc.systemmenu_name,
   })
 
   let afunc = null
   if (doc.api_function) {
-    afunc = await common_api.findOne({
+    afunc = await common_api.findOneBy({
       api_function: doc.api_function,
     })
   }
@@ -187,12 +185,12 @@ async function addMenuAct(req: Request) {
 async function modifyMenuAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let menum = await common_systemmenu.findOne({
+  let menum = await common_systemmenu.findOneBy({
     systemmenu_id: doc.systemmenu_id,
   })
 
   if (menum) {
-    let api = await common_api.findOne({
+    let api = await common_api.findOneBy({
       api_id: menum.api_id,
     })
 
@@ -249,11 +247,11 @@ async function modifyMenuAct(req: Request) {
 
 async function removeAct(req: Request) {
   let doc = common.docValidate(req)
-  let menum = await common_systemmenu.findOne({
+  let menum = await common_systemmenu.findOneBy({
     systemmenu_id: doc.systemmenu_id,
   })
 
-  let groups = await common_usergroup.find({
+  let groups = await common_usergroup.findBy({
     organization_id: 0,
   })
 

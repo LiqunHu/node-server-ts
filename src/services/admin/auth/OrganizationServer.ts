@@ -41,9 +41,7 @@ async function initAct() {
     },
   ]
 
-  returnData.menuInfo[0].children = JSON.parse(
-    JSON.stringify(await genMenu('0'))
-  )
+  returnData.menuInfo[0].children = JSON.parse(JSON.stringify(await genMenu('0')))
 
   return common.success(returnData)
 }
@@ -110,8 +108,7 @@ async function searchAct(req: Request) {
   let doc = common.docValidate(req),
     returnData = Object.create(null)
 
-  let queryStr =
-    'select * from tbl_common_organization where state = "1" and organization_type = "01"'
+  let queryStr = 'select * from tbl_common_organization where state = "1" and organization_type = "01"'
   let replacements = []
 
   if (doc.search_text) {
@@ -132,94 +129,88 @@ async function searchAct(req: Request) {
 async function addAct(req: Request) {
   let doc = common.docValidate(req)
   let org = await common_organization.findOne({
-    where: [
-      { organization_code: doc.organization_code },
-      { organization_name: doc.organization_name },
-    ],
+    where: [{ organization_code: doc.organization_code }, { organization_name: doc.organization_name }],
   })
 
   if (org) {
     return common.error('org_01')
   } else {
-    org = await common_organization.create({
-      organization_type: GLBConfig.ORG_TYPE.TYPE_DEFAULT,
-      organization_name: doc.organization_name,
-      organization_code: doc.organization_code,
-      organizationtemplate_id: doc.organizationtemplate_id,
-    }).save()
+    org = await common_organization
+      .create({
+        organization_type: GLBConfig.ORG_TYPE.TYPE_DEFAULT,
+        organization_name: doc.organization_name,
+        organization_code: doc.organization_code,
+        organizationtemplate_id: doc.organizationtemplate_id,
+      })
+      .save()
 
     if (doc.organizationtemplate_id) {
-      await createOrganizationMenu(
-        org.organization_id,
-        doc.organizationtemplate_id,
-        '0',
-        '0'
-      )
+      await createOrganizationMenu(org.organization_id, doc.organizationtemplate_id, '0', '0')
     }
 
-    let adduser = await common_user.create({
-      user_type: GLBConfig.USER_TYPE.TYPE_ADMINISTRATOR,
-      user_username: doc.organization_code + 'admin',
-      user_password: 'admin',
-      user_name: doc.organization_name,
-    }).save()
+    let adduser = await common_user
+      .create({
+        user_type: GLBConfig.USER_TYPE.TYPE_ADMINISTRATOR,
+        user_username: doc.organization_code + 'admin',
+        user_password: 'admin',
+        user_name: doc.organization_name,
+      })
+      .save()
 
-    await common_organization_user.create({
-      organization_id: org.organization_id,
-      user_id: adduser.user_id,
-      organization_user_default_flag: '1',
-    }).save()
+    await common_organization_user
+      .create({
+        organization_id: org.organization_id,
+        user_id: adduser.user_id,
+        organization_user_default_flag: '1',
+      })
+      .save()
 
-    let group = await common_usergroup.findOne({
+    let group = await common_usergroup.findOneBy({
       usergroup_code: 'DEFAULT',
     })
     if (group) {
-      await common_user_groups.create({
-        user_id: adduser.user_id,
-        usergroup_id: group.usergroup_id,
-      }).save()
+      await common_user_groups
+        .create({
+          user_id: adduser.user_id,
+          usergroup_id: group.usergroup_id,
+        })
+        .save()
     }
   }
   return common.success()
 }
 
-async function createOrganizationMenu(
-  organization_id: number,
-  organizationtemplate_id: number,
-  parentId: string,
-  cparentId: string
-) {
-  let menus = await common_templatemenu.find({
+async function createOrganizationMenu(organization_id: number, organizationtemplate_id: number, parentId: string, cparentId: string) {
+  let menus = await common_templatemenu.findBy({
     organizationtemplate_id: organizationtemplate_id,
     parent_id: parentId,
   })
   for (let m of menus) {
     if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT) {
-      let dm = await common_organizationmenu.create({
-        organization_id: organization_id,
-        organizationmenu_name: m.templatemenu_name,
-        organizationmenu_icon: m.templatemenu_icon,
-        organizationmenu_index: m.templatemenu_index,
-        api_id: m.api_id,
-        node_type: m.node_type,
-        parent_id: cparentId,
-      }).save()
-      await createOrganizationMenu(
-        organization_id,
-        organizationtemplate_id,
-        m.templatemenu_id + '',
-        dm.organizationmenu_id + ''
-      )
+      let dm = await common_organizationmenu
+        .create({
+          organization_id: organization_id,
+          organizationmenu_name: m.templatemenu_name,
+          organizationmenu_icon: m.templatemenu_icon,
+          organizationmenu_index: m.templatemenu_index,
+          api_id: m.api_id,
+          node_type: m.node_type,
+          parent_id: cparentId,
+        })
+        .save()
+      await createOrganizationMenu(organization_id, organizationtemplate_id, m.templatemenu_id + '', dm.organizationmenu_id + '')
     } else {
-      await common_organizationmenu.create({
-        organization_id: organization_id,
-        organizationmenu_name: m.templatemenu_name,
-        organizationmenu_icon: m.templatemenu_icon,
-        organizationmenu_index: m.templatemenu_index,
-        api_id: m.api_id,
-        node_type: m.node_type,
-        parent_id: cparentId,
-      }).save()
+      await common_organizationmenu
+        .create({
+          organization_id: organization_id,
+          organizationmenu_name: m.templatemenu_name,
+          organizationmenu_icon: m.templatemenu_icon,
+          organizationmenu_index: m.templatemenu_index,
+          api_id: m.api_id,
+          node_type: m.node_type,
+          parent_id: cparentId,
+        })
+        .save()
     }
   }
 }
@@ -240,16 +231,11 @@ async function getOrganizationMenuAct(req: Request) {
     },
   ]
 
-  returnData.menuInfo[0].children = JSON.parse(
-    JSON.stringify(await genOrganizationMenu(doc.organization_id, '0'))
-  )
+  returnData.menuInfo[0].children = JSON.parse(JSON.stringify(await genOrganizationMenu(doc.organization_id, '0')))
   return common.success(returnData)
 }
 
-async function genOrganizationMenu(
-  organization_id: number,
-  parentId: string
-): Promise<any> {
+async function genOrganizationMenu(organization_id: number, parentId: string): Promise<any> {
   let return_list = []
   let queryStr = `SELECT
                     a.*, b.api_type, 
@@ -268,10 +254,7 @@ async function genOrganizationMenu(
   for (let m of menus) {
     let sub_menus = []
     if (m.node_type === GLBConfig.NODE_TYPE.NODE_ROOT) {
-      sub_menus = await genOrganizationMenu(
-        organization_id,
-        m.organizationmenu_id
-      )
+      sub_menus = await genOrganizationMenu(organization_id, m.organizationmenu_id)
       return_list.push({
         organizationmenu_id: m.organizationmenu_id,
         organizationmenu_name: m.organizationmenu_name,
@@ -316,13 +299,15 @@ async function addFolderAct(req: Request) {
 
   logger.info('add')
 
-  await common_organizationmenu.create({
-    organization_id: doc.organization_id,
-    organizationmenu_name: doc.organizationmenu_name,
-    organizationmenu_icon: doc.organizationmenu_icon,
-    node_type: '00',
-    parent_id: doc.parent_id,
-  }).save()
+  await common_organizationmenu
+    .create({
+      organization_id: doc.organization_id,
+      organizationmenu_name: doc.organizationmenu_name,
+      organizationmenu_icon: doc.organizationmenu_icon,
+      node_type: '00',
+      parent_id: doc.parent_id,
+    })
+    .save()
 
   return common.success()
 }
@@ -330,7 +315,7 @@ async function addFolderAct(req: Request) {
 async function addMenusAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let menus = await common_organizationmenu.find({
+  let menus = await common_organizationmenu.findBy({
     organization_id: doc.organization_id,
     parent_id: doc.parent_id,
   })
@@ -343,13 +328,15 @@ async function addMenusAct(req: Request) {
   }
 
   for (let i of addItem) {
-    await common_organizationmenu.create({
-      organization_id: doc.organization_id,
-      organizationmenu_name: i.organizationmenu_name,
-      api_id: i.api_id,
-      node_type: '01',
-      parent_id: doc.parent_id,
-    }).save()
+    await common_organizationmenu
+      .create({
+        organization_id: doc.organization_id,
+        organizationmenu_name: i.organizationmenu_name,
+        api_id: i.api_id,
+        node_type: '01',
+        parent_id: doc.parent_id,
+      })
+      .save()
   }
 
   return common.success()
@@ -358,10 +345,8 @@ async function addMenusAct(req: Request) {
 async function removeItemAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let item = await common_organizationmenu.findOne({
-    where: {
-      organizationmenu_id: doc.organizationmenu_id,
-    },
+  let item = await common_organizationmenu.findOneBy({
+    organizationmenu_id: doc.organizationmenu_id,
   })
 
   if (item) {
@@ -376,14 +361,12 @@ async function removeItemAct(req: Request) {
 }
 
 async function rmFolder(organizationmenu_id: number) {
-  let folder = await common_organizationmenu.findOne({
-    where: {
-      organizationmenu_id: organizationmenu_id,
-    },
+  let folder = await common_organizationmenu.findOneBy({
+    organizationmenu_id: organizationmenu_id,
   })
 
   if (folder) {
-    let items = await common_organizationmenu.find({
+    let items = await common_organizationmenu.findBy({
       organization_id: folder.organization_id,
       parent_id: folder.organizationmenu_id + '',
     })

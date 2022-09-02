@@ -10,7 +10,7 @@ async function searchAct(req: Request) {
   const user = req.user
   logger.info(user)
   logger.debug('search')
-  const cuser = await common_user.findOne({
+  const cuser = await common_user.findOneBy({
     user_id: '00b8dcf029eb11ea9e23c9601c77fc6e',
   })
   logger.debug(cuser)

@@ -11,7 +11,7 @@ const logger = createLogger(__filename)
 async function genSystemTokenAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let user = await common_user.findOne({
+  let user = await common_user.findOneBy({
     user_id: doc.user_id,
     user_type: GLBConfig.USER_TYPE.TYPE_SYSTEM,
   })

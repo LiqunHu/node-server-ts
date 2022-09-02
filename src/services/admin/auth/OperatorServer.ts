@@ -23,7 +23,7 @@ async function initAct() {
   }[] = []
 
   async function genUserGroup(parentId: string, lev: number) {
-    let actgroups = await common_usergroup.find({
+    let actgroups = await common_usergroup.findBy({
       parent_id: parentId,
       usergroup_type: GLBConfig.USER_TYPE.TYPE_DEFAULT,
       organization_id: 0,
@@ -80,7 +80,7 @@ async function searchAct(req: Request) {
 
   for (let ap of result.data) {
     ap.user_groups = []
-    let user_groups = await common_user_groups.find({
+    let user_groups = await common_user_groups.findBy({
       user_id: ap.user_id,
     })
     for (let g of user_groups) {
@@ -98,7 +98,7 @@ async function addAct(req: Request) {
   let groupCheckFlag = true
 
   for (let gid of doc.user_groups) {
-    let usergroup = await common_usergroup.findOne({
+    let usergroup = await common_usergroup.findOneBy({
       usergroup_id: gid,
     })
     if (!usergroup) {
@@ -149,13 +149,13 @@ async function addAct(req: Request) {
 async function modifyAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let modiuser = await common_user.findOne({
+  let modiuser = await common_user.findOneBy({
     user_id: doc.old.user_id,
     state: GLBConfig.ENABLE,
   })
   if (modiuser) {
     if (doc.new.user_email) {
-      let emailuser = await common_user.findOne({
+      let emailuser = await common_user.findOneBy({
         user_id: Not(modiuser.user_id),
         user_email: doc.new.user_email,
       })
@@ -165,11 +165,9 @@ async function modifyAct(req: Request) {
     }
 
     if (doc.new.user_phone) {
-      let phoneuser = await common_user.findOne({
-        where: {
+      let phoneuser = await common_user.findOneBy({
           user_id: Not(modiuser.user_id),
           user_phone: doc.new.user_phone,
-        },
       })
       if (phoneuser) {
         return common.error('operator_02')
@@ -229,7 +227,7 @@ async function modifyAct(req: Request) {
 async function deleteAct(req: Request) {
   let doc = common.docValidate(req)
 
-  let deluser = await common_user.findOne({
+  let deluser = await common_user.findOneBy({
     user_id: doc.user_id,
     state: GLBConfig.ENABLE,
   })

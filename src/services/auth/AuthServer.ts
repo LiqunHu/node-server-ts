@@ -157,12 +157,12 @@ async function signinBySmsAct(req: Request) {
   } else if (doc.code !== rdsData.code) {
     return common.error('auth_04')
   } else {
-    let user = await common_user.findOne({
+    let user = await common_user.findOneBy({
       user_phone: doc.user_phone,
     })
 
     if (!user) {
-      let group = await common_usergroup.findOne({
+      let group = await common_usergroup.findOneBy({
         usergroup_code: 'DEFAULT',
       })
 
@@ -187,10 +187,8 @@ async function signinBySmsAct(req: Request) {
         })
         .save()
 
-      user = await common_user.findOne({
-        where: {
+      user = await common_user.findOneBy({
           user_id: user.user_id,
-        },
       })
     }
 
@@ -337,7 +335,7 @@ async function registerAct(req: Request) {
       return common.error('auth_04')
     } else {
       await redisClient.del(smskey)
-      let group = await common_usergroup.findOne({
+      let group = await common_usergroup.findOneBy({
         usergroup_code: 'DEFAULT',
       })
 
@@ -364,7 +362,7 @@ async function registerAct(req: Request) {
         .save()
 
       // login
-      user = await common_user.findOne({
+      user = await common_user.findOneBy({
         user_id: user.user_id,
       })
       if (!user) {
@@ -395,7 +393,7 @@ async function loginInit(user: common_user, session_token: string, type: string)
     returnData.city = user.user_city
     returnData.password_state = user.user_password_error
 
-    let wechat = await common_user_wechat.find({
+    let wechat = await common_user_wechat.findBy({
       user_id: user.user_id,
     })
 
